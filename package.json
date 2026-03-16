@@ -1,5 +1,5 @@
 {
-  "name": "@cmoreno/claude-statusline",
+  "name": "@cmorenogit/claude-statusline",
   "version": "1.0.0",
   "description": "A rich two-line statusline for Claude Code with context usage, API rate limits, git branch, session duration, and lines changed",
   "bin": {
@@ -16,7 +16,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cmoreno/claude-statusline.git"
+    "url": "git+https://github.com/cmorenogit/claude-statusline.git"
   },
   "files": [
     "bin/"

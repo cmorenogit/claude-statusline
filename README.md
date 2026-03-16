@@ -1,4 +1,4 @@
-# @cmoreno/claude-statusline
+# @cmorenogit/claude-statusline
 
 A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that shows context usage, API rate limits, git branch, session duration, and lines changed.
 
@@ -43,7 +43,7 @@ Usage bars change color based on percentage:
 ## Install
 
 ```bash
-npx @cmoreno/claude-statusline
+npx @cmorenogit/claude-statusline
 ```
 
 This will:
@@ -57,7 +57,7 @@ Restart Claude Code to see the new status line.
 ## Uninstall
 
 ```bash
-npx @cmoreno/claude-statusline --uninstall
+npx @cmorenogit/claude-statusline --uninstall
 ```
 
 This restores your previous statusline from backup and removes the config from settings.

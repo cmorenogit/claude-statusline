@@ -1,0 +1,27 @@
+{
+  "name": "@cmoreno/claude-statusline",
+  "version": "1.0.0",
+  "description": "A rich two-line statusline for Claude Code with context usage, API rate limits, git branch, session duration, and lines changed",
+  "bin": {
+    "claude-statusline": "./bin/install.js"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "statusline",
+    "cli",
+    "developer-tools"
+  ],
+  "author": "César Moreno",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cmoreno/claude-statusline.git"
+  },
+  "files": [
+    "bin/"
+  ],
+  "engines": {
+    "node": ">=14"
+  }
+}

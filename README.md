@@ -8,23 +8,22 @@ A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/
 
 ### Line 1 — Session info
 
-| Icon | Section | Description |
-|------|---------|-------------|
-| `⚡` | Model | Active model display name |
-| `📁` | Directory | Current project directory |
-| `` | Branch | Git branch (read from `.git/HEAD`, no fork) |
-| | Lines | Lines added (green) / removed (red) in session |
+| # | Section | Description |
+|---|---------|-------------|
+| 1 | Model | Active model display name |
+| 2 | Directory | Current project directory |
+| 3 | Branch | Git branch (read from `.git/HEAD`, no fork) |
+| 4 | Lines changed | Lines added (green) / removed (red) in session |
 
 ### Line 2 — Metrics & rate limits
 
-| Icon | Section | Description |
-|------|---------|-------------|
-| `⚙` | Context | Context window usage with 10-block bar (each = 10%) |
-| `🕐` | Duration | Wall-clock session duration |
-| `⚡` | Current | 5-hour API usage window with bar |
-| `📅` | Weekly | 7-day API usage window with bar |
-| `$` | Extra | Extra credits used/limit (if enabled) |
-| `󰑐` | Reset | Time until window resets (24h format) |
+| # | Section | Description |
+|---|---------|-------------|
+| 1 | Context | Context window usage — 10-block bar (each = 10%) |
+| 2 | Duration | Wall-clock session duration |
+| 3 | Current | 5-hour API usage window with bar and reset time |
+| 4 | Weekly | 7-day API usage window with bar and reset time |
+| 5 | Extra | Extra credits used/limit (if enabled) |
 
 ### Color theme — Catppuccin Mocha
 

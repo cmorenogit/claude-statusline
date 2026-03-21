@@ -31,14 +31,10 @@ else
     DIR_DISPLAY="$PROJECT_NAME/${CURRENT_DIR#$PROJECT_DIR/}"
 fi
 
-# ── Context color + bar ────────────────────────────────
+# ── Context color ─────────────────────────────────────
 if [ "$PCT" -ge 80 ]; then CLR="$R"
 elif [ "$PCT" -ge 60 ]; then CLR="$Y"
 else CLR="$G"; fi
-
-FILLED=$((PCT / 10)); EMPTY=$((10 - FILLED))
-printf -v _filled "%${FILLED}s" ""; printf -v _empty "%${EMPTY}s" ""
-BAR="${_filled// /#}${_empty// /-}"
 
 # ── Git branch (read .git/HEAD directly, no fork) ─────
 BRANCH=""
@@ -71,7 +67,7 @@ fi
 # ── Line 1 ─────────────────────────────────────────────
 LINE="${C}${MODEL}${RST} ${SEP} ${DIR_DISPLAY}"
 [ -n "$BRANCH" ] && LINE+=" ${SEP} ${BRANCH}"
-LINE+=" ${SEP} ${CLR}[${BAR}]${RST} ${PCT}%% ${SEP} ${DURATION} ${SEP} ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
+LINE+=" ${SEP} ${DURATION} ${SEP} ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
 printf "${LINE}\n"
 
 # ── Rate limit helpers (no subshells — use namerefs) ──
@@ -85,7 +81,7 @@ color_for_pct() {
 }
 
 build_bar() {
-    local -n _bar_out=$1; local pct="${2:-0}" width="${3:-8}"
+    local -n _bar_out=$1; local pct="${2:-0}" width="${3:-5}"
     [ "$pct" -lt 0 ] 2>/dev/null && pct=0
     [ "$pct" -gt 100 ] 2>/dev/null && pct=100
     local filled=$(( pct * width / 100 ))
@@ -93,10 +89,10 @@ build_bar() {
     local bar_color filled_str empty_str
     color_for_pct bar_color "$pct"
     printf -v filled_str "%${filled}s" ""
-    filled_str="${filled_str// /●}"
+    filled_str="${filled_str// /#}"
     printf -v empty_str "%${empty}s" ""
-    empty_str="${empty_str// /○}"
-    _bar_out="${bar_color}${filled_str}${D}${empty_str}${RST}"
+    empty_str="${empty_str// /-}"
+    _bar_out="${bar_color}[${filled_str}${D}${empty_str}${bar_color}]${RST}"
 }
 
 format_reset_time() {
@@ -185,9 +181,12 @@ if $needs_refresh; then
     [ -z "$usage_data" ] && [ -f "$cache_file" ] && usage_data=$(cat "$cache_file" 2>/dev/null)
 fi
 
-# ── Line 2: rate limits ───────────────────────────────
+# ── Line 2: ctx + rate limits ─────────────────────────
+build_bar ctx_bar "$PCT"
+printf -v _ctx_fmt "%2d" "$PCT"
+LINE2="${W}ctx${RST} ${ctx_bar} ${CLR}${_ctx_fmt}%%${RST}"
+
 if [ -n "$usage_data" ]; then
-    # Single jq call for all usage fields
     mapfile -t _u < <(echo "$usage_data" | jq -r '
         (.five_hour.utilization // 0 | round | tostring),
         (.seven_day.utilization // 0 | round | tostring),
@@ -202,29 +201,28 @@ if [ -n "$usage_data" ]; then
     extra_enabled="${_u[2]:-false}"; extra_used="${_u[3]:-0}"; extra_limit="${_u[4]:-0}"; extra_pct="${_u[5]:-0}"
     five_reset_iso="${_u[6]:-}"; seven_reset_iso="${_u[7]:-}"
 
-    bar_width=8
-    build_bar five_bar "$five_pct" "$bar_width"
+    build_bar five_bar "$five_pct"
     color_for_pct five_clr "$five_pct"
     format_reset_time five_reset "$five_reset_iso" "time"
 
-    build_bar seven_bar "$seven_pct" "$bar_width"
+    build_bar seven_bar "$seven_pct"
     color_for_pct seven_clr "$seven_pct"
     format_reset_time seven_reset "$seven_reset_iso" "datetime"
 
     printf -v _five_fmt "%2d" "$five_pct"
     printf -v _seven_fmt "%2d" "$seven_pct"
-    RATE="${W}current${RST} ${five_bar} ${five_clr}${_five_fmt}%%${RST}"
-    [ -n "$five_reset" ] && RATE+=" ${D}⟳${RST} ${W}${five_reset}${RST}"
-    RATE+=" ${SEP} ${W}weekly${RST} ${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
-    [ -n "$seven_reset" ] && RATE+=" ${D}⟳${RST} ${W}${seven_reset}${RST}"
+    LINE2+=" ${SEP} ${W}current${RST} ${five_bar} ${five_clr}${_five_fmt}%%${RST}"
+    [ -n "$five_reset" ] && LINE2+=" ${D}⟳${RST} ${W}${five_reset}${RST}"
+    LINE2+=" ${SEP} ${W}weekly${RST} ${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
+    [ -n "$seven_reset" ] && LINE2+=" ${D}⟳${RST} ${W}${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then
-        build_bar extra_bar "$extra_pct" "$bar_width"
+        build_bar extra_bar "$extra_pct"
         color_for_pct extra_clr "$extra_pct"
         printf -v extra_used_fmt "%.2f" "$extra_used"
         printf -v extra_limit_fmt "%.2f" "$extra_limit"
-        RATE+=" ${SEP} ${W}extra${RST} ${extra_bar} ${extra_clr}\$${extra_used_fmt}${D}/${RST}${W}\$${extra_limit_fmt}${RST}"
+        LINE2+=" ${SEP} ${W}extra${RST} ${extra_bar} ${extra_clr}\$${extra_used_fmt}${D}/${RST}${W}\$${extra_limit_fmt}${RST}"
     fi
-
-    printf "${RATE}\n"
 fi
+
+printf "${LINE2}\n"

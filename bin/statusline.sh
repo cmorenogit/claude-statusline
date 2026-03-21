@@ -77,7 +77,7 @@ ICO_WEEK=$'\uf073'     #
 # ── Line 1 ─────────────────────────────────────────────
 LINE="${C}${ICO_MODEL} ${MODEL}${RST} ${SEP} ${W}${ICO_DIR} ${DIR_DISPLAY}${RST}"
 [ -n "$BRANCH" ] && LINE+=" ${SEP} ${G}${ICO_BRANCH} ${BRANCH}${RST}"
-LINE+=" ${SEP} ${Y}${ICO_TIME} ${DURATION}${RST} ${SEP} ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
+LINE+=" ${SEP} ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
 printf "${LINE}\n"
 
 # ── Rate limit helpers (no subshells — use namerefs) ──
@@ -190,7 +190,8 @@ fi
 # ── Line 2: ctx + rate limits ─────────────────────────
 build_bar ctx_bar "$PCT"
 printf -v _ctx_fmt "%2d" "$PCT"
-LINE2="${C}${ICO_CTX} ${RST}${ctx_bar} ${CLR}${_ctx_fmt}%%${RST}"
+LINE2="${C}${ICO_CTX}  ${RST}${ctx_bar}  ${CLR}${_ctx_fmt}%%${RST}"
+LINE2+=" ${SEP} ${Y}${ICO_TIME} ${DURATION}${RST}"
 
 if [ -n "$usage_data" ]; then
     mapfile -t _u < <(echo "$usage_data" | jq -r '
@@ -217,9 +218,9 @@ if [ -n "$usage_data" ]; then
 
     printf -v _five_fmt "%2d" "$five_pct"
     printf -v _seven_fmt "%2d" "$seven_pct"
-    LINE2+=" ${SEP} ${Y}${ICO_RATE} ${RST}${five_bar} ${five_clr}${_five_fmt}%%${RST}"
+    LINE2+=" ${SEP} ${Y}${ICO_RATE}  ${RST}${five_bar}  ${five_clr}${_five_fmt}%%${RST}"
     [ -n "$five_reset" ] && LINE2+=" ${D}⟳  ${five_reset}${RST}"
-    LINE2+=" ${SEP} ${BLUE}${ICO_WEEK} ${RST}${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
+    LINE2+=" ${SEP} ${BLUE}${ICO_WEEK}  ${RST}${seven_bar}  ${seven_clr}${_seven_fmt}%%${RST}"
     [ -n "$seven_reset" ] && LINE2+=" ${D}⟳  ${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then

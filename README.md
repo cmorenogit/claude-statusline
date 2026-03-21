@@ -23,7 +23,6 @@ A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/
 | 2 | Duration | Wall-clock session duration |
 | 3 | Current | 5-hour API usage window with bar and reset time |
 | 4 | Weekly | 7-day API usage window with bar and reset time |
-| 5 | Extra | Extra credits used/limit (if enabled) |
 
 ### Color theme — Catppuccin Mocha
 

@@ -14,14 +14,13 @@ mapfile -t _f < <(echo "$input" | jq -r '
     (.workspace.project_dir // ""),
     (.workspace.current_dir // ""),
     (.context_window.used_percentage // 0 | floor | tostring),
-    (.context_window.context_window_size // 200000 | tostring),
     (.transcript_path // ""),
     (.cost.total_lines_added // 0 | tostring),
     (.cost.total_lines_removed // 0 | tostring)
 ')
 MODEL="${_f[0]}"; PROJECT_DIR="${_f[1]}"; CURRENT_DIR="${_f[2]}"
-PCT="${_f[3]:-0}"; CTX_SIZE="${_f[4]}"; TRANSCRIPT="${_f[5]}"
-ADDED="${_f[6]}"; REMOVED="${_f[7]}"
+PCT="${_f[3]:-0}"; TRANSCRIPT="${_f[4]}"
+ADDED="${_f[5]}"; REMOVED="${_f[6]}"
 
 # ── Directory display ──────────────────────────────────
 PROJECT_NAME="${PROJECT_DIR##*/}"
@@ -68,17 +67,8 @@ if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
     fi
 fi
 
-# ── Context window label ──────────────────────────────
-if [ "$CTX_SIZE" -ge 1000000 ]; then CTX_LABEL="1M"
-else CTX_LABEL="200K"; fi
-
 # ── Line 1 ─────────────────────────────────────────────
-# Avoid redundancy if display_name already includes context size
-if [[ "$MODEL" == *"1M"* ]] || [[ "$MODEL" == *"200K"* ]]; then
-    LINE="${C}${MODEL}${RST} | ${DIR_DISPLAY}"
-else
-    LINE="${C}${MODEL}${RST} ${D}(${CTX_LABEL})${RST} | ${DIR_DISPLAY}"
-fi
+LINE="${C}${MODEL}${RST} | ${DIR_DISPLAY}"
 [ -n "$BRANCH" ] && LINE+=" | ${BRANCH}"
 LINE+=" | ${CLR}[${BAR}]${RST} ${PCT}%% | ${DURATION} | ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
 printf "${LINE}\n"

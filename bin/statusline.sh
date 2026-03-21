@@ -212,9 +212,9 @@ if [ -n "$usage_data" ]; then
     printf -v _five_fmt "%2d" "$five_pct"
     printf -v _seven_fmt "%2d" "$seven_pct"
     LINE2+=" ${SEP} ${W}current${RST} ${five_bar} ${five_clr}${_five_fmt}%%${RST}"
-    [ -n "$five_reset" ] && LINE2+="  ${D}⟳${RST} ${W}${five_reset}${RST}"
+    [ -n "$five_reset" ] && LINE2+=" ${D}⟳${RST}  ${W}${five_reset}${RST}"
     LINE2+=" ${SEP} ${W}weekly${RST} ${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
-    [ -n "$seven_reset" ] && LINE2+="  ${D}⟳${RST} ${W}${seven_reset}${RST}"
+    [ -n "$seven_reset" ] && LINE2+=" ${D}⟳${RST}  ${W}${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then
         build_bar extra_bar "$extra_pct"

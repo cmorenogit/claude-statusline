@@ -13,8 +13,8 @@ const reset = "\x1b[0m";
 
 const CLAUDE_DIR = path.join(process.env.HOME, ".claude");
 const SETTINGS_FILE = path.join(CLAUDE_DIR, "settings.json");
-const STATUSLINE_FILE = path.join(CLAUDE_DIR, "statusline.sh");
-const BACKUP_FILE = path.join(CLAUDE_DIR, "statusline.sh.backup");
+const STATUSLINE_FILE = path.join(CLAUDE_DIR, "statusline-command.sh");
+const BACKUP_FILE = path.join(CLAUDE_DIR, "statusline-command.sh.backup");
 const SOURCE_FILE = path.join(__dirname, "statusline.sh");
 
 function log(icon, msg) {

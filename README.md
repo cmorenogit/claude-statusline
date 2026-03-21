@@ -1,44 +1,66 @@
 # @cmorenogit/claude-statusline
 
-A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that shows context usage, API rate limits, git branch, session duration, and lines changed.
+A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with Catppuccin Mocha theme, Nerd Font icons, and block-char progress bars.
 
 ## Preview
 
 ```
-Opus 4.6 (1M context) (1M) | my-project | main | [####------] 40% | 1h12m | +185/-6
-current ●●●●○○○○ 40% ⟳ 3:22pm  │  weekly ●●○○○○○○ 20% ⟳ mar 20, 8:00am
+⚡ Opus 4.6 (1M context) │ 📁 app-profile │  feature/foo │ +103/-69
+⚙  ████░░░░░░ 45% │ 🕐 23m │ ⚡  ░░░░░░░░░░ 2% 󰑐 17:00 │ 📅  █░░░░░░░░░ 11% 󰑐 mar27 00:00
 ```
 
 ### Line 1 — Session info
 
-| Section | Description |
-|---------|-------------|
-| `Opus 4.6 (1M context)` | Active model name |
-| `(1M)` | Context window size (200K or 1M) |
-| `my-project` | Current project directory |
-| `main` | Git branch |
-| `[####------] 40%` | Context window usage with color-coded bar |
-| `1h12m` | Real wall-clock session duration |
-| `+185/-6` | Lines added/removed in session |
+| Icon | Section | Description |
+|------|---------|-------------|
+| `⚡` | Model | Active model display name |
+| `📁` | Directory | Current project directory |
+| `` | Branch | Git branch (read from `.git/HEAD`, no fork) |
+| | Lines | Lines added (green) / removed (red) in session |
 
-### Line 2 — API rate limits
+### Line 2 — Metrics & rate limits
 
-| Section | Description |
-|---------|-------------|
-| `current ●●●●○○○○ 40%` | 5-hour usage window with visual bar |
-| `⟳ 3:22pm` | Time when 5-hour window resets |
-| `weekly ●●○○○○○○ 20%` | 7-day usage window with visual bar |
-| `⟳ mar 20, 8:00am` | Date/time when weekly window resets |
-| `extra $2.50/$10.00` | Extra credits used/limit (if enabled) |
+| Icon | Section | Description |
+|------|---------|-------------|
+| `⚙` | Context | Context window usage with 10-block bar (each = 10%) |
+| `🕐` | Duration | Wall-clock session duration |
+| `⚡` | Current | 5-hour API usage window with bar |
+| `📅` | Weekly | 7-day API usage window with bar |
+| `$` | Extra | Extra credits used/limit (if enabled) |
+| `󰑐` | Reset | Time until window resets (24h format) |
 
-### Colors
+### Color theme — Catppuccin Mocha
+
+| Element | Color | Hex |
+|---------|-------|-----|
+| Model | Blue | `#89b4fa` |
+| Directory | Text | `#cdd6f4` |
+| Branch | Green | `#a6e3a1` |
+| Context icon | Mauve | `#cba6f7` |
+| Duration | Subtext | `#a6adc8` |
+| Current icon | Peach | `#fab387` |
+| Weekly icon | Blue | `#89b4fa` |
+| Extra icon | Yellow | `#f9e2af` |
+| Reset times | Overlay | `#7f849c` |
+| Separators | Surface | `#585b70` |
 
 Usage bars change color based on percentage:
 
-- **Green** — below 50%
-- **Orange** — 50-69%
-- **Yellow** — 70-89%
-- **Red** — 90%+
+| Range | Color | Hex |
+|-------|-------|-----|
+| < 50% | Green | `#a6e3a1` |
+| 50-69% | Peach | `#fab387` |
+| 70-89% | Yellow | `#f9e2af` |
+| 90%+ | Red | `#f38ba8` |
+
+## Prerequisites
+
+- **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** CLI installed and authenticated
+- **Bash 4+** — macOS ships with bash 3, install with `brew install bash`
+- **[Nerd Font](https://www.nerdfonts.com/)** — required for icons (e.g., JetBrains Mono NF, DankMono NF, MesloLGS NF)
+- **jq** — JSON parsing (`brew install jq`)
+- **curl** — API usage fetching (pre-installed on macOS)
+- **Truecolor terminal** — for Catppuccin colors (Ghostty, iTerm2, Kitty, Alacritty, WezTerm)
 
 ## Install
 
@@ -47,12 +69,18 @@ npx @cmorenogit/claude-statusline
 ```
 
 This will:
-1. Check dependencies (`jq`, `curl`, `git`, `bash 4+`)
+1. Detect your bash 4+ path and patch the shebang
 2. Back up your existing statusline (if any)
-3. Install the statusline script to `~/.claude/statusline.sh`
+3. Install the script to `~/.claude/statusline-command.sh`
 4. Update `~/.claude/settings.json` with the statusline config
 
 Restart Claude Code to see the new status line.
+
+## Update
+
+```bash
+npx @cmorenogit/claude-statusline@latest
+```
 
 ## Uninstall
 
@@ -60,31 +88,28 @@ Restart Claude Code to see the new status line.
 npx @cmorenogit/claude-statusline --uninstall
 ```
 
-This restores your previous statusline from backup and removes the config from settings.
-
-## Requirements
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- `bash` 4+ (macOS: `brew install bash`)
-- `jq` — JSON parsing
-- `curl` — API usage fetching
-- `git` — branch detection
+Restores your previous statusline from backup and removes the config from settings.
 
 ## How it works
 
-- **Context data** is extracted from the JSON that Claude Code pipes to the statusline command via stdin
-- **API rate limits** are fetched from `api.anthropic.com/api/oauth/usage` using your OAuth token (from Keychain, credentials file, or env var)
-- **Rate limit data is cached** for 60 seconds to avoid API spam
-- **Session duration** is derived from the transcript file creation time
-- All JSON parsing is batched into minimal `jq` calls for performance
+- **Context data** is extracted from the JSON that Claude Code pipes to stdin
+- **API rate limits** are fetched from `api.anthropic.com/api/oauth/usage` using your OAuth token (Keychain or credentials file)
+- **Rate limit data is cached** for 5 minutes to avoid API overhead
+- **Git branch** is read directly from `.git/HEAD` (no fork)
+- **Session duration** is derived from transcript file birth time using `$EPOCHSECONDS`
+- **No subshells** — helper functions use bash namerefs (`local -n`) to avoid fork overhead
+- All JSON parsing is batched into minimal `jq` calls
 
-## Platform support
+### Performance
 
-| Platform | Status |
-|----------|--------|
-| macOS (Apple Silicon) | Fully supported |
-| macOS (Intel) | Supported (requires `brew install bash`) |
-| Linux | Supported |
+| Scenario | Time |
+|----------|------|
+| With cache (99% of calls) | ~37ms |
+| Cache miss (every 5 min) | ~480ms |
+
+## Platform
+
+macOS only (Apple Silicon & Intel). Requires `brew install bash` for bash 4+.
 
 ## License
 

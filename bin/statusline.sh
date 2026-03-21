@@ -216,9 +216,9 @@ if [ -n "$usage_data" ]; then
     format_reset_time seven_reset "$seven_reset_iso" "datetime"
 
     LINE2+=" ${SEP} ${Y}${ICO_RATE}  ${RST}${five_bar} ${five_clr}${five_pct}%%${RST}"
-    [ -n "$five_reset" ] && LINE2+=" ${D}⟳  ${five_reset}${RST}"
+    [ -n "$five_reset" ] && LINE2+=" ${Y}󰑐${RST} ${D}${five_reset}${RST}"
     LINE2+=" ${SEP} ${BLUE}${ICO_WEEK}  ${RST}${seven_bar} ${seven_clr}${seven_pct}%%${RST}"
-    [ -n "$seven_reset" ] && LINE2+=" ${D}⟳  ${seven_reset}${RST}"
+    [ -n "$seven_reset" ] && LINE2+=" ${BLUE}󰑐${RST} ${D}${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then
         build_bar extra_bar "$extra_pct"

@@ -3,18 +3,10 @@
 set -euo pipefail
 input="$(cat)"
 
-# ── Colors (Catppuccin Mocha) ─────────────────────────
-RST='\033[0m'
-BLUE='\033[38;2;137;180;250m'     # #89b4fa
-GREEN='\033[38;2;166;227;161m'    # #a6e3a1
-PEACH='\033[38;2;250;179;135m'    # #fab387
-YELLOW='\033[38;2;249;226;175m'   # #f9e2af
-RED='\033[38;2;243;139;168m'      # #f38ba8
-MAUVE='\033[38;2;203;166;247m'    # #cba6f7
-TEXT='\033[38;2;205;214;244m'     # #cdd6f4
-SUBTEXT='\033[38;2;166;173;200m'  # #a6adc8
-OVERLAY='\033[38;2;127;132;156m'  # #7f849c
-SURFACE='\033[38;2;88;91;112m'    # #585b70
+# ── Theme ─────────────────────────────────────────────
+THEME_NAME="${STATUSLINE_THEME:-catppuccin-mocha}"
+THEME_DIR="${HOME}/.claude/statusline-themes"
+source "${THEME_DIR}/${THEME_NAME}.sh"
 SEP="${SURFACE}│${RST}"
 
 # ── Single jq call: extract all fields at once ─────────
@@ -40,9 +32,9 @@ else
 fi
 
 # ── Context color ─────────────────────────────────────
-if [ "$PCT" -ge 80 ]; then CLR="$RED"
-elif [ "$PCT" -ge 60 ]; then CLR="$YELLOW"
-else CLR="$GREEN"; fi
+if [ "$PCT" -ge 80 ]; then CLR="$NEGATIVE"
+elif [ "$PCT" -ge 60 ]; then CLR="$CAUTION"
+else CLR="$POSITIVE"; fi
 
 # ── Git branch (read .git/HEAD directly, no fork) ─────
 BRANCH=""
@@ -82,18 +74,18 @@ ICO_RATE=$'\uf0e7'     #
 ICO_WEEK=$'\uf073'     #
 
 # ── Line 1 ─────────────────────────────────────────────
-LINE="${BLUE}${ICO_MODEL} ${MODEL}${RST} ${SEP} ${TEXT}${ICO_DIR} ${DIR_DISPLAY}${RST}"
-[ -n "$BRANCH" ] && LINE+=" ${SEP} ${GREEN}${ICO_BRANCH} ${BRANCH}${RST}"
-LINE+=" ${SEP} ${GREEN}+${ADDED}${RST}/${RED}-${REMOVED}${RST}"
+LINE="${PRIMARY}${ICO_MODEL} ${MODEL}${RST} ${SEP} ${TEXT}${ICO_DIR} ${DIR_DISPLAY}${RST}"
+[ -n "$BRANCH" ] && LINE+=" ${SEP} ${POSITIVE}${ICO_BRANCH} ${BRANCH}${RST}"
+LINE+=" ${SEP} ${POSITIVE}+${ADDED}${RST}/${NEGATIVE}-${REMOVED}${RST}"
 printf "${LINE}\n"
 
 # ── Rate limit helpers (no subshells — use namerefs) ──
 color_for_pct() {
     local -n _clr_out=$1; local pct=$2
-    if [ "$pct" -ge 90 ]; then _clr_out="$RED"
-    elif [ "$pct" -ge 70 ]; then _clr_out="$YELLOW"
-    elif [ "$pct" -ge 50 ]; then _clr_out="$PEACH"
-    else _clr_out="$GREEN"
+    if [ "$pct" -ge 90 ]; then _clr_out="$NEGATIVE"
+    elif [ "$pct" -ge 70 ]; then _clr_out="$CAUTION"
+    elif [ "$pct" -ge 50 ]; then _clr_out="$NOTICE"
+    else _clr_out="$POSITIVE"
     fi
 }
 
@@ -196,7 +188,7 @@ fi
 
 # ── Line 2: ctx + rate limits ─────────────────────────
 build_bar ctx_bar "$PCT"
-LINE2="${MAUVE}${ICO_CTX}  ${RST}${ctx_bar} ${CLR}${PCT}%%${RST}"
+LINE2="${SECONDARY}${ICO_CTX}  ${RST}${ctx_bar} ${CLR}${PCT}%%${RST}"
 LINE2+=" ${SEP} ${SUBTEXT}${ICO_TIME} ${DURATION}${RST}"
 
 if [ -n "$usage_data" ]; then
@@ -222,18 +214,18 @@ if [ -n "$usage_data" ]; then
     color_for_pct seven_clr "$seven_pct"
     format_reset_time seven_reset "$seven_reset_iso" "datetime"
 
-    LINE2+=" ${SEP} ${PEACH}${ICO_RATE}  ${RST}${five_bar} ${five_clr}${five_pct}%%${RST}"
-    [ -n "$five_reset" ] && LINE2+=" ${PEACH}󰑐${RST} ${OVERLAY}${five_reset}${RST}"
-    LINE2+=" ${SEP} ${BLUE}${ICO_WEEK}  ${RST}${seven_bar} ${seven_clr}${seven_pct}%%${RST}"
+    LINE2+=" ${SEP} ${NOTICE}${ICO_RATE}  ${RST}${five_bar} ${five_clr}${five_pct}%%${RST}"
+    [ -n "$five_reset" ] && LINE2+=" ${NOTICE}󰑐${RST} ${OVERLAY}${five_reset}${RST}"
+    LINE2+=" ${SEP} ${PRIMARY}${ICO_WEEK}  ${RST}${seven_bar} ${seven_clr}${seven_pct}%%${RST}"
 
-    [ -n "$seven_reset" ] && LINE2+=" ${BLUE}󰑐${RST} ${OVERLAY}${seven_reset}${RST}"
+    [ -n "$seven_reset" ] && LINE2+=" ${PRIMARY}󰑐${RST} ${OVERLAY}${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then
         build_bar extra_bar "$extra_pct"
         color_for_pct extra_clr "$extra_pct"
         printf -v extra_used_fmt "%.2f" "$extra_used"
         printf -v extra_limit_fmt "%.2f" "$extra_limit"
-        LINE2+=" ${SEP} ${YELLOW}$ ${RST}${extra_bar} ${extra_clr}\$${extra_used_fmt}${SURFACE}/${RST}${TEXT}\$${extra_limit_fmt}${RST}"
+        LINE2+=" ${SEP} ${CAUTION}$ ${RST}${extra_bar} ${extra_clr}\$${extra_used_fmt}${SURFACE}/${RST}${TEXT}\$${extra_limit_fmt}${RST}"
     fi
 fi
 

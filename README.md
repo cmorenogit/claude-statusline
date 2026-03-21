@@ -24,29 +24,29 @@ A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/
 | 3 | Current | 5-hour API usage window with bar and reset time |
 | 4 | Weekly | 7-day API usage window with bar and reset time |
 
-### Color theme — Catppuccin Mocha
+### Color theme — Catppuccin Mocha (default)
 
-| Element | Color | Hex |
-|---------|-------|-----|
-| Model | Blue | `#89b4fa` |
-| Directory | Text | `#cdd6f4` |
-| Branch | Green | `#a6e3a1` |
-| Context icon | Mauve | `#cba6f7` |
-| Duration | Subtext | `#a6adc8` |
-| Current icon | Peach | `#fab387` |
-| Weekly icon | Blue | `#89b4fa` |
-| Extra icon | Yellow | `#f9e2af` |
-| Reset times | Overlay | `#7f849c` |
-| Separators | Surface | `#585b70` |
+| Token | Used for | Hex |
+|-------|----------|-----|
+| `PRIMARY` | Model, weekly icon | `#89b4fa` |
+| `SECONDARY` | Context icon | `#cba6f7` |
+| `POSITIVE` | Branch, additions, ok bars | `#a6e3a1` |
+| `NOTICE` | 5hr rate icon, moderate bars | `#fab387` |
+| `CAUTION` | Extra credits, warning bars | `#f9e2af` |
+| `NEGATIVE` | Removals, critical bars | `#f38ba8` |
+| `TEXT` | Directory | `#cdd6f4` |
+| `SUBTEXT` | Duration | `#a6adc8` |
+| `OVERLAY` | Reset times | `#7f849c` |
+| `SURFACE` | Separators, empty bars | `#585b70` |
 
 Usage bars change color based on percentage:
 
-| Range | Color | Hex |
+| Range | Token | Hex |
 |-------|-------|-----|
-| < 50% | Green | `#a6e3a1` |
-| 50-69% | Peach | `#fab387` |
-| 70-89% | Yellow | `#f9e2af` |
-| 90%+ | Red | `#f38ba8` |
+| < 50% | `POSITIVE` | `#a6e3a1` |
+| 50-69% | `NOTICE` | `#fab387` |
+| 70-89% | `CAUTION` | `#f9e2af` |
+| 90%+ | `NEGATIVE` | `#f38ba8` |
 
 ## Prerequisites
 
@@ -101,6 +101,24 @@ Restores your previous statusline from backup and removes the config from settin
 |----------|------|
 | With cache (99% of calls) | ~37ms |
 | Cache miss (every 5 min) | ~480ms |
+
+## Themes
+
+Three built-in themes are installed to `~/.claude/statusline-themes/`:
+
+| Theme | Description |
+|-------|-------------|
+| `catppuccin-mocha` | Warm pastels on dark background (default) |
+| `dracula` | High contrast with vibrant accents |
+| `nord` | Arctic, cool blue tones |
+
+Switch themes by setting the `STATUSLINE_THEME` environment variable:
+
+```bash
+export STATUSLINE_THEME=dracula
+```
+
+Add it to your shell profile (`~/.zshrc` or `~/.bashrc`) to persist across sessions.
 
 ## Platform
 

@@ -16,6 +16,8 @@ const SETTINGS_FILE = path.join(CLAUDE_DIR, "settings.json");
 const STATUSLINE_FILE = path.join(CLAUDE_DIR, "statusline-command.sh");
 const BACKUP_FILE = path.join(CLAUDE_DIR, "statusline-command.sh.backup");
 const SOURCE_FILE = path.join(__dirname, "statusline.sh");
+const THEMES_SRC = path.join(__dirname, "..", "themes");
+const THEMES_DEST = path.join(CLAUDE_DIR, "statusline-themes");
 
 function log(icon, msg) {
   console.log(`  ${icon} ${msg}`);
@@ -111,6 +113,18 @@ function install() {
   fs.writeFileSync(STATUSLINE_FILE, script, { mode: 0o755 });
   log(`${green}✓${reset}`, `Installed statusline to ${dim}${STATUSLINE_FILE}${reset}`);
 
+  // Install themes
+  if (fs.existsSync(THEMES_SRC)) {
+    if (!fs.existsSync(THEMES_DEST)) {
+      fs.mkdirSync(THEMES_DEST, { recursive: true });
+    }
+    const themes = fs.readdirSync(THEMES_SRC).filter((f) => f.endsWith(".sh"));
+    for (const theme of themes) {
+      fs.copyFileSync(path.join(THEMES_SRC, theme), path.join(THEMES_DEST, theme));
+    }
+    log(`${green}✓${reset}`, `Installed ${themes.length} themes to ${dim}${THEMES_DEST}${reset}`);
+  }
+
   // Update settings.json
   let settings = {};
   if (fs.existsSync(SETTINGS_FILE)) {
@@ -143,6 +157,12 @@ function uninstall() {
   } else if (fs.existsSync(STATUSLINE_FILE)) {
     fs.unlinkSync(STATUSLINE_FILE);
     log(`${green}✓${reset}`, "Removed statusline script");
+  }
+
+  // Remove themes
+  if (fs.existsSync(THEMES_DEST)) {
+    fs.rmSync(THEMES_DEST, { recursive: true });
+    log(`${green}✓${reset}`, "Removed themes directory");
   }
 
   // Remove statusLine from settings

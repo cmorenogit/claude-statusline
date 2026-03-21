@@ -189,8 +189,7 @@ fi
 
 # ── Line 2: ctx + rate limits ─────────────────────────
 build_bar ctx_bar "$PCT"
-printf -v _ctx_fmt "%2d" "$PCT"
-LINE2="${C}${ICO_CTX}  ${RST}${ctx_bar}  ${CLR}${_ctx_fmt}%%${RST}"
+LINE2="${C}${ICO_CTX}  ${RST}${ctx_bar} ${CLR}${PCT}%%${RST}"
 LINE2+=" ${SEP} ${Y}${ICO_TIME} ${DURATION}${RST}"
 
 if [ -n "$usage_data" ]; then
@@ -216,11 +215,9 @@ if [ -n "$usage_data" ]; then
     color_for_pct seven_clr "$seven_pct"
     format_reset_time seven_reset "$seven_reset_iso" "datetime"
 
-    printf -v _five_fmt "%2d" "$five_pct"
-    printf -v _seven_fmt "%2d" "$seven_pct"
-    LINE2+=" ${SEP} ${Y}${ICO_RATE}  ${RST}${five_bar}  ${five_clr}${_five_fmt}%%${RST}"
+    LINE2+=" ${SEP} ${Y}${ICO_RATE}  ${RST}${five_bar} ${five_clr}${five_pct}%%${RST}"
     [ -n "$five_reset" ] && LINE2+=" ${D}⟳  ${five_reset}${RST}"
-    LINE2+=" ${SEP} ${BLUE}${ICO_WEEK}  ${RST}${seven_bar}  ${seven_clr}${_seven_fmt}%%${RST}"
+    LINE2+=" ${SEP} ${BLUE}${ICO_WEEK}  ${RST}${seven_bar} ${seven_clr}${seven_pct}%%${RST}"
     [ -n "$seven_reset" ] && LINE2+=" ${D}⟳  ${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then

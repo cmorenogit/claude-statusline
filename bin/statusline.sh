@@ -91,7 +91,7 @@ color_for_pct() {
 }
 
 build_bar() {
-    local -n _bar_out=$1; local pct="${2:-0}" width="${3:-5}"
+    local -n _bar_out=$1; local pct="${2:-0}" width="${3:-10}"
     [ "$pct" -lt 0 ] 2>/dev/null && pct=0
     [ "$pct" -gt 100 ] 2>/dev/null && pct=100
     local filled=$(( pct * width / 100 ))

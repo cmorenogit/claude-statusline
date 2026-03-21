@@ -73,33 +73,34 @@ LINE="${C}${MODEL}${RST} | ${DIR_DISPLAY}"
 LINE+=" | ${CLR}[${BAR}]${RST} ${PCT}%% | ${DURATION} | ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
 printf "${LINE}\n"
 
-# ── Rate limit helpers ─────────────────────────────────
+# ── Rate limit helpers (no subshells — use namerefs) ──
 color_for_pct() {
-    local pct=$1
-    if [ "$pct" -ge 90 ]; then printf "$R"
-    elif [ "$pct" -ge 70 ]; then printf "$Y"
-    elif [ "$pct" -ge 50 ]; then printf "$ORANGE"
-    else printf "$G"
+    local -n _clr_out=$1; local pct=$2
+    if [ "$pct" -ge 90 ]; then _clr_out="$R"
+    elif [ "$pct" -ge 70 ]; then _clr_out="$Y"
+    elif [ "$pct" -ge 50 ]; then _clr_out="$ORANGE"
+    else _clr_out="$G"
     fi
 }
 
 build_bar() {
-    local pct="${1:-0}" width="${2:-8}"
+    local -n _bar_out=$1; local pct="${2:-0}" width="${3:-8}"
     [ "$pct" -lt 0 ] 2>/dev/null && pct=0
     [ "$pct" -gt 100 ] 2>/dev/null && pct=100
     local filled=$(( pct * width / 100 ))
     local empty=$(( width - filled ))
     local bar_color filled_str empty_str
-    bar_color=$(color_for_pct "$pct")
+    color_for_pct bar_color "$pct"
     printf -v filled_str "%${filled}s" ""
     filled_str="${filled_str// /●}"
     printf -v empty_str "%${empty}s" ""
     empty_str="${empty_str// /○}"
-    printf "${bar_color}${filled_str}${D}${empty_str}${RST}"
+    _bar_out="${bar_color}${filled_str}${D}${empty_str}${RST}"
 }
 
 format_reset_time() {
-    local iso_str="$1" style="$2"
+    local -n _time_out=$1; local iso_str="$2" style="$3"
+    _time_out=""
     [ -z "$iso_str" ] || [ "$iso_str" = "null" ] && return
     local stripped="${iso_str%%.*}"
     stripped="${stripped%%Z}"
@@ -116,13 +117,13 @@ format_reset_time() {
             local raw
             raw=$(/bin/date -j -r "$epoch" +"%l:%M%p" 2>/dev/null) || return
             raw="${raw# }"; raw="${raw//.}"
-            printf '%s' "${raw,,}"
+            _time_out="${raw,,}"
             ;;
         datetime)
             local raw
             raw=$(/bin/date -j -r "$epoch" +"%b %-d, %l:%M%p" 2>/dev/null) || return
             raw="${raw//  / }"; raw="${raw# }"; raw="${raw//.}"
-            printf '%s' "${raw,,}"
+            _time_out="${raw,,}"
             ;;
     esac
 }
@@ -157,7 +158,7 @@ needs_refresh=true
 usage_data=""
 
 if [ -f "$cache_file" ]; then
-    cache_mtime=$(stat -f %m "$cache_file" 2>/dev/null || stat -c %Y "$cache_file" 2>/dev/null)
+    cache_mtime=$(stat -f %m "$cache_file" 2>/dev/null)
     cache_age=$(( EPOCHSECONDS - cache_mtime ))
     if [ "$cache_age" -lt 300 ]; then
         needs_refresh=false
@@ -201,24 +202,26 @@ if [ -n "$usage_data" ]; then
     five_reset_iso="${_u[6]:-}"; seven_reset_iso="${_u[7]:-}"
 
     bar_width=8
-    five_bar=$(build_bar "$five_pct" "$bar_width")
-    five_clr=$(color_for_pct "$five_pct")
-    five_reset=$(format_reset_time "$five_reset_iso" "time")
+    build_bar five_bar "$five_pct" "$bar_width"
+    color_for_pct five_clr "$five_pct"
+    format_reset_time five_reset "$five_reset_iso" "time"
 
-    seven_bar=$(build_bar "$seven_pct" "$bar_width")
-    seven_clr=$(color_for_pct "$seven_pct")
-    seven_reset=$(format_reset_time "$seven_reset_iso" "datetime")
+    build_bar seven_bar "$seven_pct" "$bar_width"
+    color_for_pct seven_clr "$seven_pct"
+    format_reset_time seven_reset "$seven_reset_iso" "datetime"
 
-    RATE="${W}current${RST} ${five_bar} ${five_clr}$(printf "%2d" "$five_pct")%%${RST}"
+    printf -v _five_fmt "%2d" "$five_pct"
+    printf -v _seven_fmt "%2d" "$seven_pct"
+    RATE="${W}current${RST} ${five_bar} ${five_clr}${_five_fmt}%%${RST}"
     [ -n "$five_reset" ] && RATE+=" ${D}⟳${RST} ${W}${five_reset}${RST}"
-    RATE+="  ${D}│${RST}  ${W}weekly${RST} ${seven_bar} ${seven_clr}$(printf "%2d" "$seven_pct")%%${RST}"
+    RATE+="  ${D}│${RST}  ${W}weekly${RST} ${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
     [ -n "$seven_reset" ] && RATE+=" ${D}⟳${RST} ${W}${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then
-        extra_bar=$(build_bar "$extra_pct" "$bar_width")
-        extra_clr=$(color_for_pct "$extra_pct")
-        extra_used_fmt=$(printf "%.2f" "$extra_used")
-        extra_limit_fmt=$(printf "%.2f" "$extra_limit")
+        build_bar extra_bar "$extra_pct" "$bar_width"
+        color_for_pct extra_clr "$extra_pct"
+        printf -v extra_used_fmt "%.2f" "$extra_used"
+        printf -v extra_limit_fmt "%.2f" "$extra_limit"
         RATE+="  ${D}│${RST}  ${W}extra${RST} ${extra_bar} ${extra_clr}\$${extra_used_fmt}${D}/${RST}${W}\$${extra_limit_fmt}${RST}"
     fi
 

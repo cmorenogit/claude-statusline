@@ -7,6 +7,7 @@ input="$(cat)"
 C='\033[36m'; G='\033[32m'; Y='\033[33m'; R='\033[31m'; D='\033[90m'; RST='\033[0m'
 W='\033[38;2;220;220;220m'
 ORANGE='\033[38;2;255;176;85m'
+SEP="${D}│${RST}"
 
 # ── Single jq call: extract all fields at once ─────────
 mapfile -t _f < <(echo "$input" | jq -r '
@@ -68,9 +69,9 @@ if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
 fi
 
 # ── Line 1 ─────────────────────────────────────────────
-LINE="${C}${MODEL}${RST} | ${DIR_DISPLAY}"
-[ -n "$BRANCH" ] && LINE+=" | ${BRANCH}"
-LINE+=" | ${CLR}[${BAR}]${RST} ${PCT}%% | ${DURATION} | ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
+LINE="${C}${MODEL}${RST} ${SEP} ${DIR_DISPLAY}"
+[ -n "$BRANCH" ] && LINE+=" ${SEP} ${BRANCH}"
+LINE+=" ${SEP} ${CLR}[${BAR}]${RST} ${PCT}%% ${SEP} ${DURATION} ${SEP} ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
 printf "${LINE}\n"
 
 # ── Rate limit helpers (no subshells — use namerefs) ──
@@ -214,7 +215,7 @@ if [ -n "$usage_data" ]; then
     printf -v _seven_fmt "%2d" "$seven_pct"
     RATE="${W}current${RST} ${five_bar} ${five_clr}${_five_fmt}%%${RST}"
     [ -n "$five_reset" ] && RATE+=" ${D}⟳${RST} ${W}${five_reset}${RST}"
-    RATE+="  ${D}│${RST}  ${W}weekly${RST} ${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
+    RATE+=" ${SEP} ${W}weekly${RST} ${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
     [ -n "$seven_reset" ] && RATE+=" ${D}⟳${RST} ${W}${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then
@@ -222,7 +223,7 @@ if [ -n "$usage_data" ]; then
         color_for_pct extra_clr "$extra_pct"
         printf -v extra_used_fmt "%.2f" "$extra_used"
         printf -v extra_limit_fmt "%.2f" "$extra_limit"
-        RATE+="  ${D}│${RST}  ${W}extra${RST} ${extra_bar} ${extra_clr}\$${extra_used_fmt}${D}/${RST}${W}\$${extra_limit_fmt}${RST}"
+        RATE+=" ${SEP} ${W}extra${RST} ${extra_bar} ${extra_clr}\$${extra_used_fmt}${D}/${RST}${W}\$${extra_limit_fmt}${RST}"
     fi
 
     printf "${RATE}\n"

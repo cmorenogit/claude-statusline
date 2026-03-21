@@ -7,6 +7,7 @@ input="$(cat)"
 C='\033[36m'; G='\033[32m'; Y='\033[33m'; R='\033[31m'; D='\033[90m'; RST='\033[0m'
 W='\033[38;2;220;220;220m'
 ORANGE='\033[38;2;255;176;85m'
+BLUE='\033[38;2;100;149;237m'
 SEP="${D}│${RST}"
 
 # ── Single jq call: extract all fields at once ─────────
@@ -65,9 +66,9 @@ if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
 fi
 
 # ── Line 1 ─────────────────────────────────────────────
-LINE="${C}${MODEL}${RST} ${SEP} ${DIR_DISPLAY}"
-[ -n "$BRANCH" ] && LINE+=" ${SEP} ${BRANCH}"
-LINE+=" ${SEP} ${DURATION} ${SEP} ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
+LINE="${C}${MODEL}${RST} ${SEP} ${W}${DIR_DISPLAY}${RST}"
+[ -n "$BRANCH" ] && LINE+=" ${SEP} ${G}${BRANCH}${RST}"
+LINE+=" ${SEP} ${Y}${DURATION}${RST} ${SEP} ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
 printf "${LINE}\n"
 
 # ── Rate limit helpers (no subshells — use namerefs) ──
@@ -184,7 +185,7 @@ fi
 # ── Line 2: ctx + rate limits ─────────────────────────
 build_bar ctx_bar "$PCT"
 printf -v _ctx_fmt "%2d" "$PCT"
-LINE2="${W}ctx${RST} ${ctx_bar} ${CLR}${_ctx_fmt}%%${RST}"
+LINE2="${C}ctx${RST} ${ctx_bar} ${CLR}${_ctx_fmt}%%${RST}"
 
 if [ -n "$usage_data" ]; then
     mapfile -t _u < <(echo "$usage_data" | jq -r '
@@ -211,17 +212,17 @@ if [ -n "$usage_data" ]; then
 
     printf -v _five_fmt "%2d" "$five_pct"
     printf -v _seven_fmt "%2d" "$seven_pct"
-    LINE2+=" ${SEP} ${W}current${RST} ${five_bar} ${five_clr}${_five_fmt}%%${RST}"
-    [ -n "$five_reset" ] && LINE2+=" ${D}⟳${RST}  ${W}${five_reset}${RST}"
-    LINE2+=" ${SEP} ${W}weekly${RST} ${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
-    [ -n "$seven_reset" ] && LINE2+=" ${D}⟳${RST}  ${W}${seven_reset}${RST}"
+    LINE2+=" ${SEP} ${Y}current${RST} ${five_bar} ${five_clr}${_five_fmt}%%${RST}"
+    [ -n "$five_reset" ] && LINE2+=" ${D}⟳  ${five_reset}${RST}"
+    LINE2+=" ${SEP} ${BLUE}weekly${RST} ${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
+    [ -n "$seven_reset" ] && LINE2+=" ${D}⟳  ${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then
         build_bar extra_bar "$extra_pct"
         color_for_pct extra_clr "$extra_pct"
         printf -v extra_used_fmt "%.2f" "$extra_used"
         printf -v extra_limit_fmt "%.2f" "$extra_limit"
-        LINE2+=" ${SEP} ${W}extra${RST} ${extra_bar} ${extra_clr}\$${extra_used_fmt}${D}/${RST}${W}\$${extra_limit_fmt}${RST}"
+        LINE2+=" ${SEP} ${ORANGE}extra${RST} ${extra_bar} ${extra_clr}\$${extra_used_fmt}${D}/${RST}${W}\$${extra_limit_fmt}${RST}"
     fi
 fi
 

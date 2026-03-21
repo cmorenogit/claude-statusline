@@ -1,6 +1,6 @@
 # @cmorenogit/claude-statusline
 
-A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with Catppuccin Mocha theme, Nerd Font icons, and block-char progress bars.
+A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with themeable semantic color tokens, Nerd Font icons, and block-char progress bars.
 
 ## Preview
 
@@ -13,7 +13,7 @@ A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/
 | 1 | Model | Active model display name |
 | 2 | Directory | Current project directory |
 | 3 | Branch | Git branch (read from `.git/HEAD`, no fork) |
-| 4 | Lines changed | Lines added (green) / removed (red) in session |
+| 4 | Lines changed | Lines added / removed in session |
 
 ### Line 2 — Metrics & rate limits
 
@@ -24,30 +24,6 @@ A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/
 | 3 | Current | 5-hour API usage window with bar and reset time |
 | 4 | Weekly | 7-day API usage window with bar and reset time |
 
-### Color theme — Catppuccin Mocha (default)
-
-| Token | Used for | Hex |
-|-------|----------|-----|
-| `PRIMARY` | Model, weekly icon | `#89b4fa` |
-| `SECONDARY` | Context icon | `#cba6f7` |
-| `POSITIVE` | Branch, additions, ok bars | `#a6e3a1` |
-| `NOTICE` | 5hr rate icon, moderate bars | `#fab387` |
-| `CAUTION` | Extra credits, warning bars | `#f9e2af` |
-| `NEGATIVE` | Removals, critical bars | `#f38ba8` |
-| `TEXT` | Directory | `#cdd6f4` |
-| `SUBTEXT` | Duration | `#a6adc8` |
-| `OVERLAY` | Reset times | `#7f849c` |
-| `SURFACE` | Separators, empty bars | `#585b70` |
-
-Usage bars change color based on percentage:
-
-| Range | Token | Hex |
-|-------|-------|-----|
-| < 50% | `POSITIVE` | `#a6e3a1` |
-| 50-69% | `NOTICE` | `#fab387` |
-| 70-89% | `CAUTION` | `#f9e2af` |
-| 90%+ | `NEGATIVE` | `#f38ba8` |
-
 ## Prerequisites
 
 - **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** CLI installed and authenticated
@@ -55,7 +31,7 @@ Usage bars change color based on percentage:
 - **[Nerd Font](https://www.nerdfonts.com/)** — required for icons (e.g., JetBrains Mono NF, DankMono NF, MesloLGS NF)
 - **jq** — JSON parsing (`brew install jq`)
 - **curl** — API usage fetching (pre-installed on macOS)
-- **Truecolor terminal** — for Catppuccin colors (Ghostty, iTerm2, Kitty, Alacritty, WezTerm)
+- **Truecolor terminal** — for theme colors (Ghostty, iTerm2, Kitty, Alacritty, WezTerm)
 
 ## Install
 
@@ -67,7 +43,8 @@ This will:
 1. Detect your bash 4+ path and patch the shebang
 2. Back up your existing statusline (if any)
 3. Install the script to `~/.claude/statusline-command.sh`
-4. Update `~/.claude/settings.json` with the statusline config
+4. Install themes to `~/.claude/statusline-themes/`
+5. Update `~/.claude/settings.json` with the statusline config
 
 Restart Claude Code to see the new status line.
 
@@ -83,7 +60,57 @@ npx @cmorenogit/claude-statusline@latest
 npx @cmorenogit/claude-statusline --uninstall
 ```
 
-Restores your previous statusline from backup and removes the config from settings.
+Restores your previous statusline from backup, removes themes, and cleans the config from settings.
+
+## Themes
+
+Three built-in themes are installed to `~/.claude/statusline-themes/`:
+
+| Theme | Description |
+|-------|-------------|
+| `catppuccin-mocha` | Warm pastels on dark background (default) |
+| `dracula` | High contrast with vibrant accents |
+| `nord` | Arctic, cool blue tones |
+
+Switch themes by setting the `STATUSLINE_THEME` environment variable:
+
+```bash
+export STATUSLINE_THEME=dracula
+```
+
+Add it to your shell profile (`~/.zshrc` or `~/.bashrc`) to persist across sessions. If not set, defaults to `catppuccin-mocha`.
+
+### Semantic color tokens
+
+Themes use semantic tokens instead of color names, so each theme maps meaning to its own palette:
+
+| Token | Used for | Catppuccin Mocha | Dracula | Nord |
+|-------|----------|-----------------|---------|------|
+| `PRIMARY` | Model, weekly icon | `#89b4fa` | `#8be9fd` | `#88c0d0` |
+| `SECONDARY` | Context icon | `#cba6f7` | `#bd93f9` | `#b48ead` |
+| `POSITIVE` | Branch, additions, ok bars | `#a6e3a1` | `#50fa7b` | `#a3be8c` |
+| `NOTICE` | 5hr rate, moderate bars | `#fab387` | `#ffb86c` | `#d08770` |
+| `CAUTION` | Extra credits, warning bars | `#f9e2af` | `#f1fa8c` | `#ebcb8b` |
+| `NEGATIVE` | Removals, critical bars | `#f38ba8` | `#ff5555` | `#bf616a` |
+| `TEXT` | Directory | `#cdd6f4` | `#f8f8f2` | `#eceff4` |
+| `SUBTEXT` | Duration | `#a6adc8` | `#bfbfbf` | `#d8dee9` |
+| `OVERLAY` | Reset times | `#7f849c` | `#6272a4` | `#4c566a` |
+| `SURFACE` | Separators, empty bars | `#585b70` | `#44475a` | `#3b4252` |
+
+### Usage bar colors
+
+Bars change color dynamically based on utilization percentage:
+
+| Range | Token |
+|-------|-------|
+| < 50% | `POSITIVE` |
+| 50-69% | `NOTICE` |
+| 70-89% | `CAUTION` |
+| 90%+ | `NEGATIVE` |
+
+### Custom themes
+
+Create your own theme file at `~/.claude/statusline-themes/<name>.sh` exporting the 10 semantic tokens above, then set `STATUSLINE_THEME=<name>`.
 
 ## How it works
 
@@ -102,28 +129,10 @@ Restores your previous statusline from backup and removes the config from settin
 | With cache (99% of calls) | ~37ms |
 | Cache miss (every 5 min) | ~480ms |
 
-## Themes
-
-Three built-in themes are installed to `~/.claude/statusline-themes/`:
-
-| Theme | Description |
-|-------|-------------|
-| `catppuccin-mocha` | Warm pastels on dark background (default) |
-| `dracula` | High contrast with vibrant accents |
-| `nord` | Arctic, cool blue tones |
-
-Switch themes by setting the `STATUSLINE_THEME` environment variable:
-
-```bash
-export STATUSLINE_THEME=dracula
-```
-
-Add it to your shell profile (`~/.zshrc` or `~/.bashrc`) to persist across sessions.
-
 ## Platform
 
 macOS only (Apple Silicon & Intel). Requires `brew install bash` for bash 4+.
 
 ## License
 
-MIT
+[MIT](LICENSE)

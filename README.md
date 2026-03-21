@@ -110,7 +110,38 @@ Bars change color dynamically based on utilization percentage:
 
 ### Custom themes
 
-Create your own theme file at `~/.claude/statusline-themes/<name>.sh` exporting the 10 semantic tokens above, then set `STATUSLINE_THEME=<name>`.
+Copy the template and fill in your palette:
+
+```bash
+cp themes/_template.sh themes/my-theme.sh
+# Edit hex values, install, then activate:
+export STATUSLINE_THEME=my-theme
+```
+
+## Layouts
+
+Two built-in layouts are installed to `~/.claude/statusline-layouts/`:
+
+| Layout | Lines | Description |
+|--------|-------|-------------|
+| `full` | 2 | Progress bars, reset times, extra credits (default) |
+| `compact` | 1 | Percentages only, no bars or reset times |
+
+Switch layouts by setting the `STATUSLINE_LAYOUT` environment variable:
+
+```bash
+export STATUSLINE_LAYOUT=compact
+```
+
+### Custom layouts
+
+Copy the template — it documents all available variables, icons, and helper functions:
+
+```bash
+cp layouts/_template.sh layouts/my-layout.sh
+# Implement render(), install, then activate:
+export STATUSLINE_LAYOUT=my-layout
+```
 
 ## How it works
 

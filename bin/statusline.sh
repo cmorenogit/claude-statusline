@@ -3,10 +3,13 @@
 set -euo pipefail
 input="$(cat)"
 
-# ── Theme ─────────────────────────────────────────────
+# ── Theme & Layout ────────────────────────────────────
 THEME_NAME="${STATUSLINE_THEME:-catppuccin-mocha}"
-THEME_DIR="${HOME}/.claude/statusline-themes"
-source "${THEME_DIR}/${THEME_NAME}.sh"
+LAYOUT_NAME="${STATUSLINE_LAYOUT:-full}"
+STATUSLINE_DIR="${HOME}/.claude/statusline-themes"
+LAYOUT_DIR="${HOME}/.claude/statusline-layouts"
+source "${STATUSLINE_DIR}/${THEME_NAME}.sh"
+source "${LAYOUT_DIR}/${LAYOUT_NAME}.sh"
 SEP="${SURFACE}│${RST}"
 
 # ── Single jq call: extract all fields at once ─────────
@@ -72,12 +75,6 @@ ICO_TIME=$'\uf017'     #
 ICO_CTX=$'\uf085'      #
 ICO_RATE=$'\uf0e7'     #
 ICO_WEEK=$'\uf073'     #
-
-# ── Line 1 ─────────────────────────────────────────────
-LINE="${PRIMARY}${ICO_MODEL} ${MODEL}${RST} ${SEP} ${TEXT}${ICO_DIR} ${DIR_DISPLAY}${RST}"
-[ -n "$BRANCH" ] && LINE+=" ${SEP} ${POSITIVE}${ICO_BRANCH} ${BRANCH}${RST}"
-LINE+=" ${SEP} ${POSITIVE}+${ADDED}${RST}/${NEGATIVE}-${REMOVED}${RST}"
-printf "${LINE}\n"
 
 # ── Rate limit helpers (no subshells — use namerefs) ──
 color_for_pct() {
@@ -186,10 +183,10 @@ if $needs_refresh; then
     [ -z "$usage_data" ] && [ -f "$cache_file" ] && usage_data=$(cat "$cache_file" 2>/dev/null)
 fi
 
-# ── Line 2: ctx + rate limits ─────────────────────────
-build_bar ctx_bar "$PCT"
-LINE2="${SECONDARY}${ICO_CTX}  ${RST}${ctx_bar} ${CLR}${PCT}%%${RST}"
-LINE2+=" ${SEP} ${SUBTEXT}${ICO_TIME} ${DURATION}${RST}"
+# ── Parse usage data ──────────────────────────────────
+five_pct=0; seven_pct=0; extra_enabled="false"
+extra_used=0; extra_limit=0; extra_pct=0
+five_reset_iso=""; seven_reset_iso=""
 
 if [ -n "$usage_data" ]; then
     mapfile -t _u < <(echo "$usage_data" | jq -r '
@@ -205,28 +202,7 @@ if [ -n "$usage_data" ]; then
     five_pct="${_u[0]:-0}"; seven_pct="${_u[1]:-0}"
     extra_enabled="${_u[2]:-false}"; extra_used="${_u[3]:-0}"; extra_limit="${_u[4]:-0}"; extra_pct="${_u[5]:-0}"
     five_reset_iso="${_u[6]:-}"; seven_reset_iso="${_u[7]:-}"
-
-    build_bar five_bar "$five_pct"
-    color_for_pct five_clr "$five_pct"
-    format_reset_time five_reset "$five_reset_iso" "time"
-
-    build_bar seven_bar "$seven_pct"
-    color_for_pct seven_clr "$seven_pct"
-    format_reset_time seven_reset "$seven_reset_iso" "datetime"
-
-    LINE2+=" ${SEP} ${NOTICE}${ICO_RATE}  ${RST}${five_bar} ${five_clr}${five_pct}%%${RST}"
-    [ -n "$five_reset" ] && LINE2+=" ${NOTICE}󰑐${RST} ${OVERLAY}${five_reset}${RST}"
-    LINE2+=" ${SEP} ${PRIMARY}${ICO_WEEK}  ${RST}${seven_bar} ${seven_clr}${seven_pct}%%${RST}"
-
-    [ -n "$seven_reset" ] && LINE2+=" ${PRIMARY}󰑐${RST} ${OVERLAY}${seven_reset}${RST}"
-
-    if [ "$extra_enabled" = "true" ]; then
-        build_bar extra_bar "$extra_pct"
-        color_for_pct extra_clr "$extra_pct"
-        printf -v extra_used_fmt "%.2f" "$extra_used"
-        printf -v extra_limit_fmt "%.2f" "$extra_limit"
-        LINE2+=" ${SEP} ${CAUTION}$ ${RST}${extra_bar} ${extra_clr}\$${extra_used_fmt}${SURFACE}/${RST}${TEXT}\$${extra_limit_fmt}${RST}"
-    fi
 fi
 
-printf "${LINE2}\n"
+# ── Render ────────────────────────────────────────────
+render

@@ -18,6 +18,8 @@ const BACKUP_FILE = path.join(CLAUDE_DIR, "statusline-command.sh.backup");
 const SOURCE_FILE = path.join(__dirname, "statusline.sh");
 const THEMES_SRC = path.join(__dirname, "..", "themes");
 const THEMES_DEST = path.join(CLAUDE_DIR, "statusline-themes");
+const LAYOUTS_SRC = path.join(__dirname, "..", "layouts");
+const LAYOUTS_DEST = path.join(CLAUDE_DIR, "statusline-layouts");
 
 function log(icon, msg) {
   console.log(`  ${icon} ${msg}`);
@@ -118,11 +120,23 @@ function install() {
     if (!fs.existsSync(THEMES_DEST)) {
       fs.mkdirSync(THEMES_DEST, { recursive: true });
     }
-    const themes = fs.readdirSync(THEMES_SRC).filter((f) => f.endsWith(".sh"));
+    const themes = fs.readdirSync(THEMES_SRC).filter((f) => f.endsWith(".sh") && !f.startsWith("_"));
     for (const theme of themes) {
       fs.copyFileSync(path.join(THEMES_SRC, theme), path.join(THEMES_DEST, theme));
     }
     log(`${green}✓${reset}`, `Installed ${themes.length} themes to ${dim}${THEMES_DEST}${reset}`);
+  }
+
+  // Install layouts
+  if (fs.existsSync(LAYOUTS_SRC)) {
+    if (!fs.existsSync(LAYOUTS_DEST)) {
+      fs.mkdirSync(LAYOUTS_DEST, { recursive: true });
+    }
+    const layouts = fs.readdirSync(LAYOUTS_SRC).filter((f) => f.endsWith(".sh") && !f.startsWith("_"));
+    for (const layout of layouts) {
+      fs.copyFileSync(path.join(LAYOUTS_SRC, layout), path.join(LAYOUTS_DEST, layout));
+    }
+    log(`${green}✓${reset}`, `Installed ${layouts.length} layouts to ${dim}${LAYOUTS_DEST}${reset}`);
   }
 
   // Update settings.json
@@ -159,10 +173,14 @@ function uninstall() {
     log(`${green}✓${reset}`, "Removed statusline script");
   }
 
-  // Remove themes
+  // Remove themes and layouts
   if (fs.existsSync(THEMES_DEST)) {
     fs.rmSync(THEMES_DEST, { recursive: true });
     log(`${green}✓${reset}`, "Removed themes directory");
+  }
+  if (fs.existsSync(LAYOUTS_DEST)) {
+    fs.rmSync(LAYOUTS_DEST, { recursive: true });
+    log(`${green}✓${reset}`, "Removed layouts directory");
   }
 
   // Remove statusLine from settings

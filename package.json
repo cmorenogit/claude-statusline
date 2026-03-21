@@ -20,7 +20,8 @@
   },
   "files": [
     "bin/",
-    "themes/"
+    "themes/",
+    "layouts/"
   ],
   "engines": {
     "node": ">=14"

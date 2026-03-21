@@ -1,6 +1,6 @@
 {
   "name": "@cmorenogit/claude-statusline",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "description": "A rich two-line statusline for Claude Code with context usage, API rate limits, git branch, session duration, and lines changed",
   "bin": {
     "claude-statusline": "./bin/install.js"

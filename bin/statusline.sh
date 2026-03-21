@@ -112,15 +112,11 @@ format_reset_time() {
     [ -z "$epoch" ] && return
     case "$style" in
         time)
-            local raw
-            raw=$(/bin/date -j -r "$epoch" +"%l:%M%p" 2>/dev/null) || return
-            raw="${raw# }"; raw="${raw//.}"
-            _time_out="${raw,,}"
+            _time_out=$(/bin/date -j -r "$epoch" +"%H:%M" 2>/dev/null) || return
             ;;
         datetime)
             local raw
-            raw=$(/bin/date -j -r "$epoch" +"%b %-d, %l:%M%p" 2>/dev/null) || return
-            raw="${raw//  / }"; raw="${raw# }"; raw="${raw//.}"
+            raw=$(/bin/date -j -r "$epoch" +"%b%-d %H:%M" 2>/dev/null) || return
             _time_out="${raw,,}"
             ;;
     esac

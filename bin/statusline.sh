@@ -65,10 +65,19 @@ if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
     fi
 fi
 
+# ── Nerd Font icons ───────────────────────────────────
+ICO_MODEL=$'\uf0e7'    #
+ICO_DIR=$'\uf07b'      #
+ICO_BRANCH=$'\ue725'   #
+ICO_TIME=$'\uf017'     #
+ICO_CTX=$'\uf085'      #
+ICO_RATE=$'\uf0e7'     #
+ICO_WEEK=$'\uf073'     #
+
 # ── Line 1 ─────────────────────────────────────────────
-LINE="${C}${MODEL}${RST} ${SEP} ${W}${DIR_DISPLAY}${RST}"
-[ -n "$BRANCH" ] && LINE+=" ${SEP} ${G}${BRANCH}${RST}"
-LINE+=" ${SEP} ${Y}${DURATION}${RST} ${SEP} ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
+LINE="${C}${ICO_MODEL} ${MODEL}${RST} ${SEP} ${W}${ICO_DIR} ${DIR_DISPLAY}${RST}"
+[ -n "$BRANCH" ] && LINE+=" ${SEP} ${G}${ICO_BRANCH} ${BRANCH}${RST}"
+LINE+=" ${SEP} ${Y}${ICO_TIME} ${DURATION}${RST} ${SEP} ${G}+${ADDED}${RST}/${R}-${REMOVED}${RST}"
 printf "${LINE}\n"
 
 # ── Rate limit helpers (no subshells — use namerefs) ──
@@ -90,10 +99,10 @@ build_bar() {
     local bar_color filled_str empty_str
     color_for_pct bar_color "$pct"
     printf -v filled_str "%${filled}s" ""
-    filled_str="${filled_str// /#}"
+    filled_str="${filled_str// /█}"
     printf -v empty_str "%${empty}s" ""
-    empty_str="${empty_str// /-}"
-    _bar_out="${bar_color}[${filled_str}${D}${empty_str}${bar_color}]${RST}"
+    empty_str="${empty_str// /░}"
+    _bar_out="${bar_color}${filled_str}${D}${empty_str}${RST}"
 }
 
 format_reset_time() {
@@ -181,7 +190,7 @@ fi
 # ── Line 2: ctx + rate limits ─────────────────────────
 build_bar ctx_bar "$PCT"
 printf -v _ctx_fmt "%2d" "$PCT"
-LINE2="${C}ctx${RST} ${ctx_bar} ${CLR}${_ctx_fmt}%%${RST}"
+LINE2="${C}${ICO_CTX} ${RST}${ctx_bar} ${CLR}${_ctx_fmt}%%${RST}"
 
 if [ -n "$usage_data" ]; then
     mapfile -t _u < <(echo "$usage_data" | jq -r '
@@ -208,9 +217,9 @@ if [ -n "$usage_data" ]; then
 
     printf -v _five_fmt "%2d" "$five_pct"
     printf -v _seven_fmt "%2d" "$seven_pct"
-    LINE2+=" ${SEP} ${Y}current${RST} ${five_bar} ${five_clr}${_five_fmt}%%${RST}"
+    LINE2+=" ${SEP} ${Y}${ICO_RATE} ${RST}${five_bar} ${five_clr}${_five_fmt}%%${RST}"
     [ -n "$five_reset" ] && LINE2+=" ${D}⟳  ${five_reset}${RST}"
-    LINE2+=" ${SEP} ${BLUE}weekly${RST} ${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
+    LINE2+=" ${SEP} ${BLUE}${ICO_WEEK} ${RST}${seven_bar} ${seven_clr}${_seven_fmt}%%${RST}"
     [ -n "$seven_reset" ] && LINE2+=" ${D}⟳  ${seven_reset}${RST}"
 
     if [ "$extra_enabled" = "true" ]; then
@@ -218,7 +227,7 @@ if [ -n "$usage_data" ]; then
         color_for_pct extra_clr "$extra_pct"
         printf -v extra_used_fmt "%.2f" "$extra_used"
         printf -v extra_limit_fmt "%.2f" "$extra_limit"
-        LINE2+=" ${SEP} ${ORANGE}extra${RST} ${extra_bar} ${extra_clr}\$${extra_used_fmt}${D}/${RST}${W}\$${extra_limit_fmt}${RST}"
+        LINE2+=" ${SEP} ${ORANGE}$ ${RST}${extra_bar} ${extra_clr}\$${extra_used_fmt}${D}/${RST}${W}\$${extra_limit_fmt}${RST}"
     fi
 fi
 

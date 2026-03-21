@@ -4,10 +4,7 @@ A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/
 
 ## Preview
 
-```
-⚡ Opus 4.6 (1M context) │ 📁 app-profile │  feature/foo │ +103/-69
-⚙  ████░░░░░░ 45% │ 🕐 23m │ ⚡  ░░░░░░░░░░ 2% 󰑐 17:00 │ 📅  █░░░░░░░░░ 11% 󰑐 mar27 00:00
-```
+![claude-statusline preview](preview.png)
 
 ### Line 1 — Session info
 

@@ -82,9 +82,12 @@ function detectBash() {
     }
   } catch {}
 
+  const installHint = process.platform === "darwin"
+    ? "brew install bash"
+    : "your distro's package manager (e.g. apt install bash, dnf install bash)";
   log(
     `${red}✗${reset}`,
-    "Bash 4+ required (for mapfile). Install with: brew install bash"
+    `Bash 4+ required (for mapfile). Install with: ${installHint}`
   );
   process.exit(1);
 }

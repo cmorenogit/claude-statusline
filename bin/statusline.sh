@@ -3,6 +3,12 @@
 set -euo pipefail
 input="$(cat)"
 
+# ── Platform detection (macOS uses BSD stat/date, Linux uses GNU) ──
+case "$OSTYPE" in
+    darwin*) IS_MACOS=1 ;;
+    *)       IS_MACOS=0 ;;
+esac
+
 # ── Theme & Layout ────────────────────────────────────
 THEME_NAME="${STATUSLINE_THEME:-catppuccin-mocha}"
 LAYOUT_NAME="${STATUSLINE_LAYOUT:-full}"
@@ -54,7 +60,15 @@ fi
 # ── Duration (wall-clock from transcript birth time) ───
 DURATION="0m"
 if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
-    START_EPOCH=$(stat -f "%B" "$TRANSCRIPT" 2>/dev/null) || true
+    if [ "$IS_MACOS" -eq 1 ]; then
+        START_EPOCH=$(stat -f "%B" "$TRANSCRIPT" 2>/dev/null) || true
+    else
+        # GNU: %W is birth time; returns "-" or "0" if FS doesn't track btime — fall back to mtime
+        START_EPOCH=$(stat -c "%W" "$TRANSCRIPT" 2>/dev/null) || true
+        if [ -z "$START_EPOCH" ] || [ "$START_EPOCH" = "-" ] || [ "$START_EPOCH" = "0" ]; then
+            START_EPOCH=$(stat -c "%Y" "$TRANSCRIPT" 2>/dev/null) || true
+        fi
+    fi
     if [ -n "$START_EPOCH" ] && [ "$START_EPOCH" -gt 0 ] 2>/dev/null; then
         ELAPSED=$(( EPOCHSECONDS - START_EPOCH ))
         if [ "$ELAPSED" -ge 3600 ]; then
@@ -105,23 +119,35 @@ format_reset_time() {
     local -n _time_out=$1; local iso_str="$2" style="$3"
     _time_out=""
     [ -z "$iso_str" ] || [ "$iso_str" = "null" ] && return
-    local stripped="${iso_str%%.*}"
-    stripped="${stripped%%Z}"
-    stripped="${stripped%%+*}"
     local epoch=""
-    if [[ "$iso_str" == *"Z"* ]] || [[ "$iso_str" == *"+00:00"* ]]; then
-        epoch=$(env TZ=UTC /bin/date -j -f "%Y-%m-%dT%H:%M:%S" "$stripped" +%s 2>/dev/null)
+    if [ "$IS_MACOS" -eq 1 ]; then
+        local stripped="${iso_str%%.*}"
+        stripped="${stripped%%Z}"
+        stripped="${stripped%%+*}"
+        if [[ "$iso_str" == *"Z"* ]] || [[ "$iso_str" == *"+00:00"* ]]; then
+            epoch=$(env TZ=UTC /bin/date -j -f "%Y-%m-%dT%H:%M:%S" "$stripped" +%s 2>/dev/null)
+        else
+            epoch=$(/bin/date -j -f "%Y-%m-%dT%H:%M:%S" "$stripped" +%s 2>/dev/null)
+        fi
     else
-        epoch=$(/bin/date -j -f "%Y-%m-%dT%H:%M:%S" "$stripped" +%s 2>/dev/null)
+        epoch=$(date -d "$iso_str" +%s 2>/dev/null)
     fi
     [ -z "$epoch" ] && return
     case "$style" in
         time)
-            _time_out=$(/bin/date -j -r "$epoch" +"%H:%M" 2>/dev/null) || return
+            if [ "$IS_MACOS" -eq 1 ]; then
+                _time_out=$(/bin/date -j -r "$epoch" +"%H:%M" 2>/dev/null) || return
+            else
+                _time_out=$(date -d "@$epoch" +"%H:%M" 2>/dev/null) || return
+            fi
             ;;
         datetime)
             local raw
-            raw=$(/bin/date -j -r "$epoch" +"%b%-d %H:%M" 2>/dev/null) || return
+            if [ "$IS_MACOS" -eq 1 ]; then
+                raw=$(/bin/date -j -r "$epoch" +"%b%-d %H:%M" 2>/dev/null) || return
+            else
+                raw=$(date -d "@$epoch" +"%b%-d %H:%M" 2>/dev/null) || return
+            fi
             _time_out="${raw,,}"
             ;;
     esac
@@ -157,7 +183,11 @@ needs_refresh=true
 usage_data=""
 
 if [ -f "$cache_file" ]; then
-    cache_mtime=$(stat -f %m "$cache_file" 2>/dev/null)
+    if [ "$IS_MACOS" -eq 1 ]; then
+        cache_mtime=$(stat -f %m "$cache_file" 2>/dev/null)
+    else
+        cache_mtime=$(stat -c %Y "$cache_file" 2>/dev/null)
+    fi
     cache_age=$(( EPOCHSECONDS - cache_mtime ))
     if [ "$cache_age" -lt 300 ]; then
         needs_refresh=false

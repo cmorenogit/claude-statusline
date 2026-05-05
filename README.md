@@ -27,11 +27,11 @@ A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/
 ## Prerequisites
 
 - **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** CLI installed and authenticated
-- **Bash 4+** — macOS ships with bash 3, install with `brew install bash`
+- **Bash 4+** — macOS ships with bash 3, install with `brew install bash`. Linux/WSL distros (Ubuntu 22.04+, Debian 11+, Fedora) ship 5.x — already covered.
 - **[Nerd Font](https://www.nerdfonts.com/)** — required for icons (e.g., JetBrains Mono NF, DankMono NF, MesloLGS NF)
-- **jq** — JSON parsing (`brew install jq`)
-- **curl** — API usage fetching (pre-installed on macOS)
-- **Truecolor terminal** — for theme colors (Ghostty, iTerm2, Kitty, Alacritty, WezTerm)
+- **jq** — JSON parsing (`brew install jq` on macOS, `apt install jq` / `dnf install jq` on Linux)
+- **curl** — API usage fetching (pre-installed on macOS and most Linux distros)
+- **Truecolor terminal** — for theme colors (Ghostty, iTerm2, Kitty, Alacritty, WezTerm, Windows Terminal). Verify with `echo $COLORTERM` (should be `truecolor` or `24bit`).
 
 ## Install
 
@@ -162,7 +162,11 @@ export STATUSLINE_LAYOUT=my-layout
 
 ## Platform
 
-macOS only (Apple Silicon & Intel). Requires `brew install bash` for bash 4+.
+- **macOS** — Apple Silicon & Intel. Requires `brew install bash` for bash 4+.
+- **Linux** — any distro with bash 4.3+ (Ubuntu 22.04+, Debian 11+, Fedora, Arch, etc.).
+- **WSL2 (Windows)** — works the same as native Linux.
+
+Platform-specific commands (`stat`, `date`) are detected at runtime via `$OSTYPE`.
 
 ## License
 

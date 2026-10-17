@@ -21,12 +21,18 @@ mapfile -t _f < <(echo "$input" | jq -r '
     (.transcript_path // ""),
     (.cost.total_lines_added // 0 | tostring),
     (.cost.total_lines_removed // 0 | tostring),
-    (.workspace.git_worktree // "")
+    (.workspace.git_worktree // ""),
+    (.rate_limits.five_hour.used_percentage // "" | if . == "" then . else round | tostring end),
+    (.rate_limits.seven_day.used_percentage // "" | if . == "" then . else round | tostring end),
+    (.rate_limits.five_hour.resets_at // "" | tostring),
+    (.rate_limits.seven_day.resets_at // "" | tostring)
 ')
 MODEL="${_f[0]}"; PROJECT_DIR="${_f[1]}"; CURRENT_DIR="${_f[2]}"
 PCT="${_f[3]:-0}"; TRANSCRIPT="${_f[4]}"
 ADDED="${_f[5]}"; REMOVED="${_f[6]}"
 GIT_WORKTREE="${_f[7]:-}"
+RL_FIVE_PCT="${_f[8]:-}"; RL_SEVEN_PCT="${_f[9]:-}"
+RL_FIVE_RESET="${_f[10]:-}"; RL_SEVEN_RESET="${_f[11]:-}"
 
 # ── Directory display ──────────────────────────────────
 PROJECT_NAME="${PROJECT_DIR##*/}"
@@ -130,7 +136,9 @@ format_reset_time() {
     stripped="${stripped%%Z}"
     stripped="${stripped%%+*}"
     local epoch=""
-    if [[ "$iso_str" == *"Z"* ]] || [[ "$iso_str" == *"+00:00"* ]]; then
+    if [[ "$iso_str" =~ ^[0-9]+$ ]]; then
+        epoch="$iso_str"  # stdin rate_limits.*.resets_at: Unix epoch seconds
+    elif [[ "$iso_str" == *"Z"* ]] || [[ "$iso_str" == *"+00:00"* ]]; then
         epoch=$(env TZ=UTC /bin/date -j -f "%Y-%m-%dT%H:%M:%S" "$stripped" +%s 2>/dev/null)
     else
         epoch=$(/bin/date -j -f "%Y-%m-%dT%H:%M:%S" "$stripped" +%s 2>/dev/null)
@@ -177,7 +185,16 @@ mkdir -p /tmp/claude
 needs_refresh=true
 usage_data=""
 
-if [ -f "$cache_file" ]; then
+# Claude Code (Pro/Max) sends rate_limits on stdin: use them and skip the API
+# call. The API is only a fallback (no rate_limits on stdin) or opt-in via
+# STATUSLINE_EXTRA_USAGE=1, since only the API reports extra-usage credits.
+STDIN_LIMITS=false
+if [ -n "$RL_FIVE_PCT$RL_SEVEN_PCT" ] && [ "${STATUSLINE_EXTRA_USAGE:-0}" != "1" ]; then
+    STDIN_LIMITS=true
+    needs_refresh=false
+fi
+
+if ! $STDIN_LIMITS && [ -f "$cache_file" ]; then
     cache_mtime=$(stat -f %m "$cache_file" 2>/dev/null)
     cache_age=$(( EPOCHSECONDS - cache_mtime ))
     if [ "$cache_age" -lt 300 ]; then
@@ -209,7 +226,11 @@ five_pct=0; seven_pct=0; extra_enabled="false"
 extra_used=0; extra_limit=0; extra_pct=0
 five_reset_iso=""; seven_reset_iso=""
 
-if [ -n "$usage_data" ]; then
+if $STDIN_LIMITS; then
+    five_pct="${RL_FIVE_PCT:-0}"; seven_pct="${RL_SEVEN_PCT:-0}"
+    five_reset_iso="$RL_FIVE_RESET"; seven_reset_iso="$RL_SEVEN_RESET"
+    usage_data="stdin"  # layouts render the rate-limit block when this is non-empty
+elif [ -n "$usage_data" ]; then
     mapfile -t _u < <(echo "$usage_data" | jq -r '
         (.five_hour.utilization // 0 | round | tostring),
         (.seven_day.utilization // 0 | round | tostring),

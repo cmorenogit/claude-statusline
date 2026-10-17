@@ -140,17 +140,25 @@ function install() {
   }
 
   // Update settings.json
+  const statusLine = {
+    type: "command",
+    command: `${bashPath} "${STATUSLINE_FILE}"`,
+  };
   let settings = {};
   if (fs.existsSync(SETTINGS_FILE)) {
     try {
       settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf-8"));
-    } catch {}
+    } catch (err) {
+      // Never overwrite a settings.json we can't parse: it holds the user's whole config
+      log(`${red}✗${reset}`, `Could not parse ${dim}settings.json${reset} (${err.message}); left it untouched`);
+      log(" ", `Add this to ${SETTINGS_FILE} manually:`);
+      console.log(`  "statusLine": ${JSON.stringify(statusLine)}`);
+      console.log();
+      process.exit(1);
+    }
   }
 
-  settings.statusLine = {
-    type: "command",
-    command: `${bashPath} "${STATUSLINE_FILE}"`,
-  };
+  settings.statusLine = statusLine;
 
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2) + "\n");
   log(`${green}✓${reset}`, `Updated ${dim}settings.json${reset} with statusLine config`);

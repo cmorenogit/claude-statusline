@@ -6,11 +6,11 @@ render() {
     fit_branch $(( 2 + ${#MODEL} + 3 + 2 + ${#DIR_DISPLAY} + 3 + 2 + WT_MARK_LEN + 3 + ${#ADDED} + ${#REMOVED} + 3 ))
     [ -n "$BRANCH" ] && LINE+=" ${SEP} ${POSITIVE}${ICO_BRANCH} ${BRANCH}${RST}${WT_MARK}"
     LINE+=" ${SEP} ${POSITIVE}+${ADDED}${RST}/${NEGATIVE}-${REMOVED}${RST}"
-    printf "${LINE}\n"
+    printf '%b\n' "$LINE"
 
     # ── Line 2 ────────────────────────────────────────
     build_bar ctx_bar "$PCT"
-    local LINE2="${SECONDARY}${ICO_CTX}  ${RST}${ctx_bar} ${CLR}${PCT}%%${RST}"
+    local LINE2="${SECONDARY}${ICO_CTX}  ${RST}${ctx_bar} ${CLR}${PCT}%${RST}"
     LINE2+=" ${SEP} ${SUBTEXT}${ICO_TIME} ${DURATION}${RST}"
 
     if [ -n "$usage_data" ]; then
@@ -22,9 +22,9 @@ render() {
         color_for_pct seven_clr "$seven_pct"
         format_reset_time seven_reset "$seven_reset_iso" "datetime"
 
-        LINE2+=" ${SEP} ${NOTICE}${ICO_RATE}  ${RST}${five_bar} ${five_clr}${five_pct}%%${RST}"
+        LINE2+=" ${SEP} ${NOTICE}${ICO_RATE}  ${RST}${five_bar} ${five_clr}${five_pct}%${RST}"
         [ -n "$five_reset" ] && LINE2+=" ${NOTICE}󰑐${RST} ${OVERLAY}${five_reset}${RST}"
-        LINE2+=" ${SEP} ${PRIMARY}${ICO_WEEK}  ${RST}${seven_bar} ${seven_clr}${seven_pct}%%${RST}"
+        LINE2+=" ${SEP} ${PRIMARY}${ICO_WEEK}  ${RST}${seven_bar} ${seven_clr}${seven_pct}%${RST}"
 
         [ -n "$seven_reset" ] && LINE2+=" ${PRIMARY}󰑐${RST} ${OVERLAY}${seven_reset}${RST}"
 
@@ -37,5 +37,5 @@ render() {
         fi
     fi
 
-    printf "${LINE2}\n"
+    printf '%b\n' "$LINE2"
 }

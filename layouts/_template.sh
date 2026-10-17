@@ -50,7 +50,11 @@
 #   format_reset_time <nameref> <iso_string> <style>
 #     Parses ISO time into nameref. style: "time" (HH:MM) or "datetime" (mmmDD HH:MM)
 
+# Print with printf '%b\n' "$LINE": %b expands the theme's \033 colors, and a "%"
+# inside the data (a directory, a percentage) is never read as a format.
+
 render() {
     # Your layout here
-    printf "Hello from my-layout\n"
+    local LINE="Hello from my-layout"
+    printf '%b\n' "$LINE"
 }

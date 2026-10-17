@@ -5,15 +5,15 @@ render() {
     fit_branch $(( 2 + ${#MODEL} + 3 + 2 + ${#DIR_DISPLAY} + 3 + 2 + WT_MARK_LEN + 3 + ${#ADDED} + ${#REMOVED} + 3 + 3 + 3 + ${#PCT} + 1 + 3 + 2 + ${#DURATION} ))
     [ -n "$BRANCH" ] && LINE+=" ${SEP} ${POSITIVE}${ICO_BRANCH} ${BRANCH}${RST}${WT_MARK}"
     LINE+=" ${SEP} ${POSITIVE}+${ADDED}${RST}/${NEGATIVE}-${REMOVED}${RST}"
-    LINE+=" ${SEP} ${SECONDARY}${ICO_CTX}  ${CLR}${PCT}%%${RST}"
+    LINE+=" ${SEP} ${SECONDARY}${ICO_CTX}  ${CLR}${PCT}%${RST}"
     LINE+=" ${SEP} ${SUBTEXT}${ICO_TIME} ${DURATION}${RST}"
 
     if [ -n "$usage_data" ]; then
         color_for_pct five_clr "$five_pct"
         color_for_pct seven_clr "$seven_pct"
 
-        LINE+=" ${SEP} ${NOTICE}${ICO_RATE} ${five_clr}${five_pct}%%${RST}"
-        LINE+=" ${SEP} ${PRIMARY}${ICO_WEEK} ${seven_clr}${seven_pct}%%${RST}"
+        LINE+=" ${SEP} ${NOTICE}${ICO_RATE} ${five_clr}${five_pct}%${RST}"
+        LINE+=" ${SEP} ${PRIMARY}${ICO_WEEK} ${seven_clr}${seven_pct}%${RST}"
 
         if [ "$extra_enabled" = "true" ]; then
             color_for_pct extra_clr "$extra_pct"
@@ -22,5 +22,5 @@ render() {
         fi
     fi
 
-    printf "${LINE}\n"
+    printf '%b\n' "$LINE"
 }

@@ -25,7 +25,8 @@ mapfile -t _f < <(echo "$input" | jq -r '
     (.rate_limits.five_hour.used_percentage // "" | if . == "" then . else round | tostring end),
     (.rate_limits.seven_day.used_percentage // "" | if . == "" then . else round | tostring end),
     (.rate_limits.five_hour.resets_at // "" | tostring),
-    (.rate_limits.seven_day.resets_at // "" | tostring)
+    (.rate_limits.seven_day.resets_at // "" | tostring),
+    (.cost.total_duration_ms | if type == "number" then floor | tostring else "" end)
 ')
 MODEL="${_f[0]}"; PROJECT_DIR="${_f[1]}"; CURRENT_DIR="${_f[2]}"
 PCT="${_f[3]:-0}"; TRANSCRIPT="${_f[4]}"
@@ -33,6 +34,7 @@ ADDED="${_f[5]}"; REMOVED="${_f[6]}"
 GIT_WORKTREE="${_f[7]:-}"
 RL_FIVE_PCT="${_f[8]:-}"; RL_SEVEN_PCT="${_f[9]:-}"
 RL_FIVE_RESET="${_f[10]:-}"; RL_SEVEN_RESET="${_f[11]:-}"
+DURATION_MS="${_f[12]:-}"
 
 # ── Directory display ──────────────────────────────────
 PROJECT_NAME="${PROJECT_DIR##*/}"
@@ -82,19 +84,27 @@ if [ -n "$HEAD_FILE" ] && [ -f "$HEAD_FILE" ]; then
 fi
 [ -n "$GIT_WORKTREE" ] && IS_WORKTREE=true
 
-# ── Duration (wall-clock from transcript birth time) ───
+# ── Duration ───────────────────────────────────────────
+# cost.total_duration_ms counts only the time the session was running, so a
+# session resumed days later doesn't show "72h". Older Claude Code versions
+# lack it: fall back to the transcript's birth time (wall-clock since creation).
 DURATION="0m"
-if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
+ELAPSED=""
+if [[ "$DURATION_MS" =~ ^[0-9]+$ ]]; then
+    ELAPSED=$(( DURATION_MS / 1000 ))
+elif [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
     START_EPOCH=$(stat -f "%B" "$TRANSCRIPT" 2>/dev/null) || true
     if [ -n "$START_EPOCH" ] && [ "$START_EPOCH" -gt 0 ] 2>/dev/null; then
         ELAPSED=$(( EPOCHSECONDS - START_EPOCH ))
-        if [ "$ELAPSED" -ge 3600 ]; then
-            DURATION="$(( ELAPSED / 3600 ))h$(( (ELAPSED % 3600) / 60 ))m"
-        elif [ "$ELAPSED" -ge 60 ]; then
-            DURATION="$(( ELAPSED / 60 ))m"
-        else
-            DURATION="${ELAPSED}s"
-        fi
+    fi
+fi
+if [ -n "$ELAPSED" ]; then
+    if [ "$ELAPSED" -ge 3600 ]; then
+        DURATION="$(( ELAPSED / 3600 ))h$(( (ELAPSED % 3600) / 60 ))m"
+    elif [ "$ELAPSED" -ge 60 ]; then
+        DURATION="$(( ELAPSED / 60 ))m"
+    else
+        DURATION="${ELAPSED}s"
     fi
 fi
 

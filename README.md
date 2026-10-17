@@ -10,17 +10,17 @@ A rich two-line statusline for [Claude Code](https://docs.anthropic.com/en/docs/
 
 | # | Section | Description |
 |---|---------|-------------|
-| 1 | Model | Active model display name |
+| 1 | Model | Active model display name and reasoning effort (`Opus 5.5 · xhigh`) |
 | 2 | Directory | Current project directory |
-| 3 | Branch | Git branch (read from `.git/HEAD`, no fork) |
+| 3 | Branch | Git branch (read from `HEAD`, no fork), shortened to fit; `󰙅 wt` in linked worktrees |
 | 4 | Lines changed | Lines added / removed in session |
 
 ### Line 2 — Metrics & rate limits
 
 | # | Section | Description |
 |---|---------|-------------|
-| 1 | Context | Context window usage — 10-block bar (each = 10%) |
-| 2 | Duration | Wall-clock session duration |
+| 1 | Context | Context window usage — 10-block bar (each = 10%) plus absolute size (`196k`) |
+| 2 | Duration | Time the session has been running (excludes time it was closed); `󰜗 cold` when the prompt cache went cold |
 | 3 | Current | 5-hour API usage window with bar and reset time |
 | 4 | Weekly | 7-day API usage window with bar and reset time |
 

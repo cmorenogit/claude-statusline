@@ -1,12 +1,12 @@
 # Compact layout — single line, no bars, no reset times
 render() {
-    local LINE="${PRIMARY}${ICO_MODEL} ${MODEL}${RST} ${SEP} ${TEXT}${ICO_DIR} ${DIR_DISPLAY}${RST}"
+    local LINE="${PRIMARY}${ICO_MODEL} ${MODEL}${RST}${EFFORT_SEG} ${SEP} ${TEXT}${ICO_DIR} ${DIR_DISPLAY}${RST}"
     # model │ dir │ branch[wt] │ +a/-r — everything but the branch name itself
-    fit_branch $(( 2 + ${#MODEL} + 3 + 2 + ${#DIR_DISPLAY} + 3 + 2 + WT_MARK_LEN + 3 + ${#ADDED} + ${#REMOVED} + 3 + 3 + 3 + ${#PCT} + 1 + 3 + 2 + ${#DURATION} ))
+    fit_branch $(( 2 + ${#MODEL} + EFFORT_LEN + 3 + 2 + ${#DIR_DISPLAY} + 3 + 2 + WT_MARK_LEN + 3 + ${#ADDED} + ${#REMOVED} + 3 + 3 + 3 + ${#PCT} + 1 + TOKENS_LEN + 3 + 2 + ${#DURATION} + CACHE_LEN ))
     [ -n "$BRANCH" ] && LINE+=" ${SEP} ${POSITIVE}${ICO_BRANCH} ${BRANCH}${RST}${WT_MARK}"
     LINE+=" ${SEP} ${POSITIVE}+${ADDED}${RST}/${NEGATIVE}-${REMOVED}${RST}"
-    LINE+=" ${SEP} ${SECONDARY}${ICO_CTX}  ${CLR}${PCT}%${RST}"
-    LINE+=" ${SEP} ${SUBTEXT}${ICO_TIME} ${DURATION}${RST}"
+    LINE+=" ${SEP} ${SECONDARY}${ICO_CTX}  ${CLR}${PCT}%${RST}${TOKENS_SEG}"
+    LINE+=" ${SEP} ${SUBTEXT}${ICO_TIME} ${DURATION}${RST}${CACHE_SEG}"
 
     if [ -n "$usage_data" ]; then
         color_for_pct five_clr "$five_pct"

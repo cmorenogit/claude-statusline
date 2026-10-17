@@ -26,7 +26,11 @@ mapfile -t _f < <(echo "$input" | jq -r '
     (.rate_limits.seven_day.used_percentage // "" | if . == "" then . else round | tostring end),
     (.rate_limits.five_hour.resets_at // "" | tostring),
     (.rate_limits.seven_day.resets_at // "" | tostring),
-    (.cost.total_duration_ms | if type == "number" then floor | tostring else "" end)
+    (.cost.total_duration_ms | if type == "number" then floor | tostring else "" end),
+    (.effort.level // ""),
+    (.prompt_cache.caching_observed | if type == "boolean" then tostring else "" end),
+    (.prompt_cache.warm | if type == "boolean" then tostring else "" end),
+    (.context_window.total_input_tokens | if type == "number" then floor | tostring else "" end)
 ')
 MODEL="${_f[0]}"; PROJECT_DIR="${_f[1]}"; CURRENT_DIR="${_f[2]}"
 PCT="${_f[3]:-0}"; TRANSCRIPT="${_f[4]}"
@@ -34,7 +38,9 @@ ADDED="${_f[5]}"; REMOVED="${_f[6]}"
 GIT_WORKTREE="${_f[7]:-}"
 RL_FIVE_PCT="${_f[8]:-}"; RL_SEVEN_PCT="${_f[9]:-}"
 RL_FIVE_RESET="${_f[10]:-}"; RL_SEVEN_RESET="${_f[11]:-}"
-DURATION_MS="${_f[12]:-}"
+DURATION_MS="${_f[12]:-}"; EFFORT="${_f[13]:-}"
+CACHE_OBSERVED="${_f[14]:-}"; CACHE_WARM="${_f[15]:-}"
+CTX_TOKENS="${_f[16]:-}"
 
 # ── Directory display ──────────────────────────────────
 PROJECT_NAME="${PROJECT_DIR##*/}"
@@ -117,6 +123,33 @@ ICO_CTX=$'\uf085'      #
 ICO_RATE=$'\uf0e7'     #
 ICO_WEEK=$'\uf073'     #
 ICO_WORKTREE=$'\U000f0645'  # 󰙅 md-file_tree
+ICO_COLD=$'\U000f0717'      # 󰜗 md-snowflake
+
+# Effort level next to the model (absent when the model has no effort parameter)
+EFFORT_SEG=""; EFFORT_LEN=0
+if [ -n "$EFFORT" ]; then
+    EFFORT_SEG=" ${SUBTEXT}· ${EFFORT}${RST}"; EFFORT_LEN=$(( 3 + ${#EFFORT} ))
+fi
+
+# Absolute context size next to the percentage: on a 1M window "20%" hides 200k
+TOKENS_SEG=""; TOKENS_LEN=0
+if [[ "$CTX_TOKENS" =~ ^[0-9]+$ ]] && [ "$CTX_TOKENS" -gt 0 ]; then
+    if [ "$CTX_TOKENS" -ge 1000000 ]; then
+        printf -v _tok "%d.%dM" $(( CTX_TOKENS / 1000000 )) $(( CTX_TOKENS % 1000000 / 100000 ))
+    elif [ "$CTX_TOKENS" -ge 1000 ]; then
+        _tok="$(( (CTX_TOKENS + 500) / 1000 ))k"
+    else
+        _tok="$CTX_TOKENS"
+    fi
+    TOKENS_SEG=" ${SUBTEXT}${_tok}${RST}"; TOKENS_LEN=$(( 1 + ${#_tok} ))
+fi
+
+# Cold prompt cache: the next turn re-processes the whole context. Shown only when
+# caching was observed this session; warm=false alone can also mean "no data".
+CACHE_SEG=""; CACHE_LEN=0
+if [ "$CACHE_OBSERVED" = "true" ] && [ "$CACHE_WARM" = "false" ]; then
+    CACHE_SEG=" ${SEP} ${PRIMARY}${ICO_COLD} cold${RST}"; CACHE_LEN=9
+fi
 
 # Linked worktrees get their own marker (icon + label in one color) so the main
 # checkout and a worktree never look alike. Layouts append it after the branch.

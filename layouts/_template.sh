@@ -10,13 +10,16 @@
 #
 # Session:
 #   MODEL        — model display name (e.g., "Opus 4.6")
+#   EFFORT_SEG   — " · xhigh" reasoning effort, ready to append after MODEL (empty if absent); EFFORT_LEN = its width
 #   DIR_DISPLAY  — project directory (e.g., "app-profile")
 #   BRANCH       — git branch (empty if not in repo); call fit_branch <cols used by the rest of the line> to shorten it
 #   WT_MARK      — worktree marker to append after BRANCH (empty outside linked worktrees); WT_MARK_LEN = its width
 #   ADDED        — lines added in session
 #   REMOVED      — lines removed in session
-#   DURATION     — session wall-clock time (e.g., "12m", "1h30m")
+#   DURATION     — time the session has been running (e.g., "12m", "1h30m"); excludes time it was closed
 #   PCT          — context window usage percentage (0-100)
+#   TOKENS_SEG   — " 196k" absolute context size, to append after PCT (empty if absent); TOKENS_LEN = its width
+#   CACHE_SEG    — " │ 󰜗 cold" when the prompt cache went cold (empty otherwise); CACHE_LEN = its width
 #   CLR          — color for PCT (POSITIVE/CAUTION/NEGATIVE)
 #
 # Rate limits (only if usage_data is non-empty):
@@ -37,7 +40,7 @@
 #
 # ── Icons (Nerd Font) ────────────────────────────────
 #
-#   ICO_MODEL ICO_DIR ICO_BRANCH ICO_TIME ICO_CTX ICO_RATE ICO_WEEK ICO_WORKTREE
+#   ICO_MODEL ICO_DIR ICO_BRANCH ICO_TIME ICO_CTX ICO_RATE ICO_WEEK ICO_WORKTREE ICO_COLD
 #
 # ── Helper functions ─────────────────────────────────
 #

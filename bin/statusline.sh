@@ -64,7 +64,13 @@ elif [ -n "$_dir" ] && [ -f "$_dir/.git" ]; then
     _gitdir=$(< "$_dir/.git"); _gitdir="${_gitdir#gitdir: }"
     [[ "$_gitdir" != /* ]] && _gitdir="$_dir/$_gitdir"
     HEAD_FILE="$_gitdir/HEAD"
-    [[ "$_gitdir" == */worktrees/* ]] && IS_WORKTREE=true
+    if [[ "$_gitdir" == */.git/worktrees/* ]]; then
+        IS_WORKTREE=true
+        # Show the main repo name instead of the (long, branch-like) worktree folder name
+        _main="${_gitdir%/.git/worktrees/*}"
+        DIR_DISPLAY="${_main##*/}"
+        [ "$CURRENT_DIR" != "$_dir" ] && DIR_DISPLAY+="/${CURRENT_DIR#$_dir/}"
+    fi
 fi
 if [ -n "$HEAD_FILE" ] && [ -f "$HEAD_FILE" ]; then
     HEAD_CONTENT=$(< "$HEAD_FILE")
@@ -102,8 +108,28 @@ ICO_RATE=$'\uf0e7'     #
 ICO_WEEK=$'\uf073'     #
 ICO_WORKTREE=$'\U000f0645'  # 󰙅 md-file_tree
 
-# Mark linked worktrees so the main checkout and a worktree never look alike
-$IS_WORKTREE && [ -n "$BRANCH" ] && BRANCH="${BRANCH} ${ICO_WORKTREE} wt"
+# Linked worktrees get their own marker (icon + label in one color) so the main
+# checkout and a worktree never look alike. Layouts append it after the branch.
+WT_MARK=""; WT_MARK_LEN=0
+if $IS_WORKTREE && [ -n "$BRANCH" ]; then
+    WT_MARK=" ${SECONDARY}${ICO_WORKTREE} wt${RST}"; WT_MARK_LEN=5
+fi
+
+# Shorten BRANCH so the line fits the terminal. $1 = visible columns the rest of
+# the line uses. Claude Code sets COLUMNS (tput can't see the terminal here).
+# First drops the type prefix (feature/, fix/…), then cuts the middle, keeping
+# the start (usually the issue id) and the tail.
+fit_branch() {
+    [ -z "$BRANCH" ] || [ -z "${COLUMNS:-}" ] && return
+    local avail=$(( COLUMNS - $1 - 4 ))
+    [ "$avail" -lt 16 ] && avail=16
+    [ "${#BRANCH}" -le "$avail" ] && return
+    [[ "$BRANCH" == */* ]] && BRANCH="${BRANCH#*/}"
+    [ "${#BRANCH}" -le "$avail" ] && return
+    local head=$(( (avail - 1) * 2 / 3 ))
+    local tail=$(( avail - 1 - head ))
+    BRANCH="${BRANCH:0:head}…${BRANCH: -tail}"
+}
 
 # ── Rate limit helpers (no subshells — use namerefs) ──
 color_for_pct() {

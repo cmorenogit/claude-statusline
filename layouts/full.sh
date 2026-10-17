@@ -2,7 +2,9 @@
 render() {
     # ── Line 1 ────────────────────────────────────────
     local LINE="${PRIMARY}${ICO_MODEL} ${MODEL}${RST} ${SEP} ${TEXT}${ICO_DIR} ${DIR_DISPLAY}${RST}"
-    [ -n "$BRANCH" ] && LINE+=" ${SEP} ${POSITIVE}${ICO_BRANCH} ${BRANCH}${RST}"
+    # model │ dir │ branch[wt] │ +a/-r — everything but the branch name itself
+    fit_branch $(( 2 + ${#MODEL} + 3 + 2 + ${#DIR_DISPLAY} + 3 + 2 + WT_MARK_LEN + 3 + ${#ADDED} + ${#REMOVED} + 3 ))
+    [ -n "$BRANCH" ] && LINE+=" ${SEP} ${POSITIVE}${ICO_BRANCH} ${BRANCH}${RST}${WT_MARK}"
     LINE+=" ${SEP} ${POSITIVE}+${ADDED}${RST}/${NEGATIVE}-${REMOVED}${RST}"
     printf "${LINE}\n"
 

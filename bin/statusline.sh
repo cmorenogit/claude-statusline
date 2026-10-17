@@ -20,11 +20,13 @@ mapfile -t _f < <(echo "$input" | jq -r '
     (.context_window.used_percentage // 0 | floor | tostring),
     (.transcript_path // ""),
     (.cost.total_lines_added // 0 | tostring),
-    (.cost.total_lines_removed // 0 | tostring)
+    (.cost.total_lines_removed // 0 | tostring),
+    (.workspace.git_worktree // "")
 ')
 MODEL="${_f[0]}"; PROJECT_DIR="${_f[1]}"; CURRENT_DIR="${_f[2]}"
 PCT="${_f[3]:-0}"; TRANSCRIPT="${_f[4]}"
 ADDED="${_f[5]}"; REMOVED="${_f[6]}"
+GIT_WORKTREE="${_f[7]:-}"
 
 # ── Directory display ──────────────────────────────────
 PROJECT_NAME="${PROJECT_DIR##*/}"
@@ -39,10 +41,26 @@ if [ "$PCT" -ge 80 ]; then CLR="$NEGATIVE"
 elif [ "$PCT" -ge 60 ]; then CLR="$CAUTION"
 else CLR="$POSITIVE"; fi
 
-# ── Git branch (read .git/HEAD directly, no fork) ─────
+# ── Git branch (read HEAD directly, no fork) ──────────
+# Walks up to the repo root. In a linked worktree `.git` is a file
+# ("gitdir: <path>"), so HEAD lives in that gitdir, not in .git/HEAD.
 BRANCH=""
-HEAD_FILE="$CURRENT_DIR/.git/HEAD"
-if [ -f "$HEAD_FILE" ]; then
+IS_WORKTREE=false
+_dir="$CURRENT_DIR"
+while [ -n "$_dir" ] && [ ! -e "$_dir/.git" ]; do
+    [ "$_dir" = "/" ] && { _dir=""; break; }
+    _dir="${_dir%/*}"; [ -z "$_dir" ] && _dir="/"
+done
+HEAD_FILE=""
+if [ -n "$_dir" ] && [ -d "$_dir/.git" ]; then
+    HEAD_FILE="$_dir/.git/HEAD"
+elif [ -n "$_dir" ] && [ -f "$_dir/.git" ]; then
+    _gitdir=$(< "$_dir/.git"); _gitdir="${_gitdir#gitdir: }"
+    [[ "$_gitdir" != /* ]] && _gitdir="$_dir/$_gitdir"
+    HEAD_FILE="$_gitdir/HEAD"
+    [[ "$_gitdir" == */worktrees/* ]] && IS_WORKTREE=true
+fi
+if [ -n "$HEAD_FILE" ] && [ -f "$HEAD_FILE" ]; then
     HEAD_CONTENT=$(< "$HEAD_FILE")
     if [[ "$HEAD_CONTENT" == ref:* ]]; then
         BRANCH="${HEAD_CONTENT#ref: refs/heads/}"
@@ -50,6 +68,9 @@ if [ -f "$HEAD_FILE" ]; then
         BRANCH="${HEAD_CONTENT:0:7}"
     fi
 fi
+[ -n "$GIT_WORKTREE" ] && IS_WORKTREE=true
+# Mark linked worktrees so the main checkout and a worktree never look alike
+$IS_WORKTREE && [ -n "$BRANCH" ] && BRANCH="${BRANCH} ⎇wt"
 
 # ── Duration (wall-clock from transcript birth time) ───
 DURATION="0m"

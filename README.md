@@ -173,7 +173,7 @@ general-purpose · opus-5-5 · ✓ done 12m ago · 35k · Summarize backlog
 - **Context data** is extracted from the JSON that Claude Code pipes to stdin
 - **API rate limits** come from the `rate_limits` field Claude Code pipes to stdin (Pro/Max subscribers), so no token or network call is needed. Without it, the script falls back to `api.anthropic.com/api/oauth/usage` using your OAuth token (Keychain or credentials file), cached for 5 minutes. Set `STATUSLINE_EXTRA_USAGE=1` to force the API path, the only source of extra-usage credits
 - **Git branch** is read directly from `HEAD` (no fork), walking up to the repo root and following the `gitdir:` pointer of linked worktrees; a worktree is marked with the `md-file_tree` Nerd Font icon (`󰙅 wt`). Inside a worktree the directory shows the main repo name, and long branch names are shortened to fit the terminal width (`COLUMNS`): the type prefix (`feature/`) goes first, then the middle is cut with `…`, keeping the issue id
-- **Session duration** is derived from transcript file birth time using `$EPOCHSECONDS`
+- **Session duration** comes from `cost.total_duration_ms` (time the session was running); older Claude Code versions without it fall back to the transcript file birth time
 - **No subshells** — helper functions use bash namerefs (`local -n`) to avoid fork overhead
 - All JSON parsing is batched into minimal `jq` calls
 

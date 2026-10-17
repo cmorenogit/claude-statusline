@@ -75,8 +75,6 @@ if [ -n "$HEAD_FILE" ] && [ -f "$HEAD_FILE" ]; then
     fi
 fi
 [ -n "$GIT_WORKTREE" ] && IS_WORKTREE=true
-# Mark linked worktrees so the main checkout and a worktree never look alike
-$IS_WORKTREE && [ -n "$BRANCH" ] && BRANCH="${BRANCH} ⎇wt"
 
 # ── Duration (wall-clock from transcript birth time) ───
 DURATION="0m"
@@ -102,6 +100,10 @@ ICO_TIME=$'\uf017'     #
 ICO_CTX=$'\uf085'      #
 ICO_RATE=$'\uf0e7'     #
 ICO_WEEK=$'\uf073'     #
+ICO_WORKTREE=$'\U000f0645'  # 󰙅 md-file_tree
+
+# Mark linked worktrees so the main checkout and a worktree never look alike
+$IS_WORKTREE && [ -n "$BRANCH" ] && BRANCH="${BRANCH} ${ICO_WORKTREE} wt"
 
 # ── Rate limit helpers (no subshells — use namerefs) ──
 color_for_pct() {

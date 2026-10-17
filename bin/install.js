@@ -16,6 +16,9 @@ const SETTINGS_FILE = path.join(CLAUDE_DIR, "settings.json");
 const STATUSLINE_FILE = path.join(CLAUDE_DIR, "statusline-command.sh");
 const BACKUP_FILE = path.join(CLAUDE_DIR, "statusline-command.sh.backup");
 const SOURCE_FILE = path.join(__dirname, "statusline.sh");
+const SUBAGENT_SRC = path.join(__dirname, "subagent-statusline.sh");
+const SUBAGENT_FILE = path.join(CLAUDE_DIR, "subagent-statusline.sh");
+const WITH_SUBAGENTS = !process.argv.includes("--no-subagents");
 const THEMES_SRC = path.join(__dirname, "..", "themes");
 const THEMES_DEST = path.join(CLAUDE_DIR, "statusline-themes");
 const LAYOUTS_SRC = path.join(__dirname, "..", "layouts");
@@ -139,6 +142,13 @@ function install() {
     log(`${green}✓${reset}`, `Installed ${layouts.length} layouts to ${dim}${LAYOUTS_DEST}${reset}`);
   }
 
+  // Install subagent rows script
+  if (WITH_SUBAGENTS && fs.existsSync(SUBAGENT_SRC)) {
+    const sub = fs.readFileSync(SUBAGENT_SRC, "utf-8").replace(/^#!.*\n/, `#!${bashPath}\n`);
+    fs.writeFileSync(SUBAGENT_FILE, sub, { mode: 0o755 });
+    log(`${green}✓${reset}`, `Installed subagent rows to ${dim}${SUBAGENT_FILE}${reset}`);
+  }
+
   // Update settings.json
   const statusLine = {
     type: "command",
@@ -161,6 +171,16 @@ function install() {
   // Merge: keep the user's other statusLine options (refreshInterval, padding…)
   settings.statusLine = { ...(settings.statusLine || {}), ...statusLine };
 
+  // Subagent rows: set only if unset or already ours, never replace the user's own
+  if (WITH_SUBAGENTS && fs.existsSync(SUBAGENT_FILE)) {
+    const current = settings.subagentStatusLine;
+    if (!current || (current.command || "").includes("subagent-statusline.sh")) {
+      settings.subagentStatusLine = { type: "command", command: `${bashPath} "${SUBAGENT_FILE}"` };
+    } else {
+      log(" ", `Kept your own ${dim}subagentStatusLine${reset}; ours is at ${dim}${SUBAGENT_FILE}${reset}`);
+    }
+  }
+
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2) + "\n");
   log(`${green}✓${reset}`, `Updated ${dim}settings.json${reset} with statusLine config`);
 
@@ -182,6 +202,11 @@ function uninstall() {
     log(`${green}✓${reset}`, "Removed statusline script");
   }
 
+  if (fs.existsSync(SUBAGENT_FILE)) {
+    fs.unlinkSync(SUBAGENT_FILE);
+    log(`${green}✓${reset}`, "Removed subagent rows script");
+  }
+
   // Remove themes and layouts
   if (fs.existsSync(THEMES_DEST)) {
     fs.rmSync(THEMES_DEST, { recursive: true });
@@ -197,6 +222,9 @@ function uninstall() {
     try {
       const settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, "utf-8"));
       delete settings.statusLine;
+      if ((settings.subagentStatusLine?.command || "").includes("subagent-statusline.sh")) {
+        delete settings.subagentStatusLine;
+      }
       fs.writeFileSync(
         SETTINGS_FILE,
         JSON.stringify(settings, null, 2) + "\n"

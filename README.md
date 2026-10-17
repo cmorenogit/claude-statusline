@@ -143,16 +143,9 @@ cp layouts/_template.sh layouts/my-layout.sh
 export STATUSLINE_LAYOUT=my-layout
 ```
 
-## Subagent rows (experimental)
+## Subagent rows
 
-`bin/subagent-statusline.sh` customizes the rows of Claude Code's agent panel through the `subagentStatusLine` setting. It is not installed by `npx` yet. To try it, add to `~/.claude/settings.json`:
-
-```json
-"subagentStatusLine": {
-  "type": "command",
-  "command": "/opt/homebrew/bin/bash \"/path/to/claude-statusline/bin/subagent-statusline.sh\""
-}
-```
+The installer also sets `subagentStatusLine`, which customizes the rows of Claude Code's agent panel (`~/.claude/subagent-statusline.sh`). It never replaces a `subagentStatusLine` you already have; skip it with `npx @cmorenogit/claude-statusline --no-subagents`.
 
 Each row shows the model the subagent runs on, how long it has run, and whether its token count is still growing:
 

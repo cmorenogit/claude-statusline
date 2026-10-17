@@ -158,7 +158,8 @@ function install() {
     }
   }
 
-  settings.statusLine = statusLine;
+  // Merge: keep the user's other statusLine options (refreshInterval, padding…)
+  settings.statusLine = { ...(settings.statusLine || {}), ...statusLine };
 
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2) + "\n");
   log(`${green}✓${reset}`, `Updated ${dim}settings.json${reset} with statusLine config`);
